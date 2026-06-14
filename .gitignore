@@ -1,5 +1,11 @@
 node_modules
 dist
+.env
+.env.*
+!.env.example
+.token.debug
+__pycache__/
+*.pyc
 dist-ssr
 *.local
 .DS_Store
