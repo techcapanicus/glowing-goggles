@@ -11,7 +11,9 @@
     "lint": "eslint .",
     "extract-keys": "node scripts/semaphore_extract_keys_playwright.mjs",
     "test-ssh": "python3 scripts/test_semaphore_ssh_all.py",
-    "provision-vm-ssh": "python3 scripts/provision_vm_ssh.py"
+    "provision-vm-ssh": "python3 scripts/provision_vm_ssh.py",
+    "audit-envs": "python3 scripts/audit_semaphore_envs_full.py --all-projects",
+    "probe-outbound": "python3 scripts/probe_outbound_access.py"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
