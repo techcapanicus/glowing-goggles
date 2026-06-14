@@ -19,7 +19,7 @@ import urllib.error
 import urllib.request
 
 PATTERNS = [
-    ("FAILED", re.compile(r"\bFAILED\b|fatal:", re.I)),
+    ("FAILED", re.compile(r"\bfatal:|\bFAILED!|failed=1\b", re.I)),
     ("WARNING", re.compile(r"\bWARNING\b|\[WARNING\]", re.I)),
     ("mode/owner", re.compile(r"mode:|owner:|\.ssh dir owner:|authorized_keys owner:", re.I)),
     ("DEBUG SSH", re.compile(r"debug1:|debug2:|debug3:", re.I)),

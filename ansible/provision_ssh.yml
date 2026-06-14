@@ -176,12 +176,35 @@
       ansible.builtin.stat:
         path: "{{ auth_keys_path }}"
       register: auth_keys_file
+      failed_when: false
+
+    - name: Locate authorized_keys if default path is missing
+      ansible.builtin.find:
+        paths: "{{ ssh_dir }}"
+        patterns: "authorized_keys*"
+        file_type: file
+      register: auth_keys_find
+      when: not auth_keys_file.stat.exists | default(false)
 
     - name: Print permission diagnostics
       ansible.builtin.debug:
         msg:
           - ".ssh dir owner: {{ ssh_dir.stat.pw_name | default('missing') }}, mode: {{ ssh_dir.stat.mode | default('missing') }}"
-          - "authorized_keys owner: {{ auth_keys_file.stat.pw_name | default('missing') }}, mode: {{ auth_keys_file.stat.mode | default('missing') }}"
+          - >-
+            authorized_keys owner: {{
+              auth_keys_file.stat.pw_name
+              if auth_keys_file.stat.exists | default(false)
+              else (auth_keys_find.files[0].pw_name if (auth_keys_find.files | default([]) | length > 0) else 'missing')
+            }}, mode: {{
+              auth_keys_file.stat.mode
+              if auth_keys_file.stat.exists | default(false)
+              else (auth_keys_find.files[0].mode if (auth_keys_find.files | default([]) | length > 0) else 'missing')
+            }}
+          - >-
+            authorized_keys path: {{
+              auth_keys_path if auth_keys_file.stat.exists | default(false)
+              else (auth_keys_find.files[0].path if (auth_keys_find.files | default([]) | length > 0) else 'not found')
+            }}
 
     - name: Check SELinux or AppArmor context on authorized_keys
       ansible.builtin.command:
@@ -244,9 +267,13 @@
 
     - name: Print sshd journal
       ansible.builtin.debug:
-        var: >-
-          {{ (sshd_journal.stdout_lines if sshd_journal.rc == 0
-              else sshd_journal_fallback.stdout_lines) | default([]) }}
+        var: sshd_journal.stdout_lines
+      when: sshd_journal.rc == 0
+
+    - name: Print sshd journal (sshd unit fallback)
+      ansible.builtin.debug:
+        var: sshd_journal_fallback.stdout_lines
+      when: sshd_journal.rc != 0
 
     # --- Controller SSH self-test ------------------------------------------
     - name: Write new private key on controller for SSH self-test

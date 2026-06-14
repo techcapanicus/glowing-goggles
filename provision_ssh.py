@@ -349,9 +349,6 @@ def ensure_inventory(api, project_id, name, content, ssh_key_id, become_key_id=N
 def ensure_repository(api, project_id, name, git_url, branch, ssh_key_id):
     repos = api.get(f"/api/project/{project_id}/repositories")
     existing = find_by_name(repos, name)
-    if existing:
-        ok(f"Reusing repository '{name}' (id {existing['id']})")
-        return existing["id"]
     payload = {
         "name": name,
         "project_id": project_id,
@@ -359,6 +356,12 @@ def ensure_repository(api, project_id, name, git_url, branch, ssh_key_id):
         "git_branch": branch,
         "ssh_key_id": ssh_key_id,
     }
+    if existing:
+        payload["id"] = existing["id"]
+        api._request("PUT", f"/api/project/{project_id}/repositories/{existing['id']}",
+                     payload)
+        ok(f"Updated repository '{name}' (id {existing['id']}, branch {branch})")
+        return existing["id"]
     created = api.post(f"/api/project/{project_id}/repositories", payload)
     repo_id = created["id"] if isinstance(created, dict) else \
         find_by_name(api.get(f"/api/project/{project_id}/repositories"), name)["id"]
