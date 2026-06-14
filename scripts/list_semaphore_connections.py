@@ -46,8 +46,12 @@ KV_LINE = re.compile(
 )
 
 
+INI_HOST = re.compile(r"^\s*(\S+)\s+ansible_host=(\S+)")
+INI_USER = re.compile(r"ansible_user=(\S+)")
+
+
 def parse_inventory_hosts(yaml_text: str) -> list[dict]:
-    """Best-effort parse of Semaphore static inventory YAML."""
+    """Best-effort parse of Semaphore static inventory YAML or INI."""
     if not yaml_text or not yaml_text.strip():
         return []
 
@@ -55,6 +59,16 @@ def parse_inventory_hosts(yaml_text: str) -> list[dict]:
     current: dict | None = None
 
     for line in yaml_text.splitlines():
+        ini = INI_HOST.match(line)
+        if ini:
+            user_m = INI_USER.search(line)
+            hosts.append({
+                "name": ini.group(1),
+                "ansible_host": ini.group(2),
+                "ansible_user": user_m.group(1) if user_m else "root",
+            })
+            continue
+
         m_host = HOST_LINE.match(line)
         if m_host:
             name = m_host.group(1)

@@ -116,6 +116,11 @@ def from_env_or_login(
         session.user()
         return session
 
+    user = username or os.environ.get("SEMAPHORE_USERNAME", "")
+    pwd = password or os.environ.get("SEMAPHORE_PASSWORD", "")
+    if user and pwd:
+        return login(base, user, pwd)
+
     env_url = os.environ.get("SEMAPHORE_URL", "").rstrip("/")
     env_tok = os.environ.get("SEMAPHORE_TOKEN", "")
     # Use .env token only when URL was not overridden to a different instance.
@@ -123,11 +128,6 @@ def from_env_or_login(
         session = SemaphoreSession(base, token=env_tok)
         session.user()
         return session
-
-    user = username or os.environ.get("SEMAPHORE_USERNAME", "")
-    pwd = password or os.environ.get("SEMAPHORE_PASSWORD", "")
-    if user and pwd:
-        return login(base, user, pwd)
 
     raise RuntimeError(
         "Provide --token / SEMAPHORE_TOKEN (copy from browser Network tab: "
