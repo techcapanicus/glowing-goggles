@@ -1,0 +1,59 @@
+---
+- name: Diagnose open ports on Semaphore controller and target
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Check listeners on controller (80, 443, 22, 2222)
+      ansible.builtin.shell: |
+        set -o pipefail
+        echo "=== Controller listeners (209.38.146.146 / $(hostname)) ==="
+        ss -tlnp | grep -E ':22 |:80 |:443 |:2222 ' || true
+        echo ""
+        echo "=== Processes on 443/80 ==="
+        ss -tlnp | grep -E ':443|:80' || true
+        echo ""
+        echo "=== sshd_config Port lines ==="
+        grep -E '^Port |^#Port ' /etc/ssh/sshd_config 2>/dev/null || true
+        echo ""
+        echo "=== nginx/caddy/apache ==="
+        systemctl is-active nginx 2>/dev/null || true
+        systemctl is-active caddy 2>/dev/null || true
+        systemctl is-active apache2 2>/dev/null || true
+      args:
+        executable: /bin/bash
+      register: controller_ports
+      changed_when: false
+
+    - name: Show controller port scan
+      ansible.builtin.debug:
+        var: controller_ports.stdout_lines
+
+- name: Nmap controller from target droplet
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Install nmap if missing
+      ansible.builtin.apt:
+        name: nmap
+        state: present
+        update_cache: true
+      failed_when: false
+
+    - name: Scan Semaphore controller from target
+      ansible.builtin.shell: |
+        set -o pipefail
+        echo "=== nmap 209.38.146.146 from $(hostname) ==="
+        nmap -Pn -p 22,80,443,2222,8080,8443 209.38.146.146 2>/dev/null || \
+          nmap -Pn 209.38.146.146 2>/dev/null || echo "nmap unavailable"
+      args:
+        executable: /bin/bash
+      register: nmap_scan
+      changed_when: false
+      failed_when: false
+
+    - name: Show nmap results
+      ansible.builtin.debug:
+        var: nmap_scan.stdout_lines

@@ -1,0 +1,43 @@
+---
+- name: Setup reverse tunnel from target to controller
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Start reverse SSH tunnel to controller
+      ansible.builtin.shell: |
+        set -uo pipefail
+        pkill -f "ssh.*-R 0.0.0.0:2222" 2>/dev/null || true
+        sleep 1
+        nohup ssh \
+          -o StrictHostKeyChecking=no \
+          -o ServerAliveInterval=30 \
+          -o ExitOnForwardFailure=yes \
+          -N \
+          -R 0.0.0.0:2222:localhost:22 \
+          -i /root/.ssh/id_ed25519 \
+          root@209.38.146.146 \
+          > /tmp/tunnel.log 2>&1 &
+        echo "Tunnel PID: $!"
+        sleep 5
+        cat /tmp/tunnel.log
+        echo "=== controller-side check (from target) ==="
+        ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+          -i /root/.ssh/id_ed25519 root@209.38.146.146 \
+          "ss -tlnp | grep 2222 || echo '2222 not listening on controller yet'" 2>&1 || true
+      args:
+        executable: /bin/bash
+      register: tunnel
+      changed_when: false
+      failed_when: false
+
+    - name: Print tunnel status
+      ansible.builtin.debug:
+        var: tunnel.stdout_lines
+
+    - name: Instructions
+      ansible.builtin.debug:
+        msg:
+          - "Reverse tunnel: target -> controller forwards controller:2222 -> target:22"
+          - "Connect: ssh -p 2222 -i ~/.ssh/media_id_ed25519 root@209.38.146.146"
+          - "If 2222 blocked externally, open it in DO firewall or try -R on port 443"

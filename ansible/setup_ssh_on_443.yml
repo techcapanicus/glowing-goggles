@@ -1,0 +1,126 @@
+---
+- name: Enable SSH on port 443 as alternative (Semaphore controller)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Check what is listening on 22, 80, 443
+      ansible.builtin.shell: |
+        set -o pipefail
+        echo "=== BEFORE ==="
+        ss -tlnp | grep -E ':22 |:80 |:443 ' || true
+        grep -E '^Port ' /etc/ssh/sshd_config 2>/dev/null || echo "Port 22 (default)"
+      args:
+        executable: /bin/bash
+      register: before_listen
+      changed_when: false
+
+    - name: Show before state
+      ansible.builtin.debug:
+        var: before_listen.stdout_lines
+
+    - name: Detect if 443 is already taken by web server
+      ansible.builtin.shell: |
+        ss -tlnp | grep ':443 ' | grep -qv sshd && echo WEB_ON_443=yes || echo WEB_ON_443=no
+      args:
+        executable: /bin/bash
+      register: web443
+      changed_when: false
+
+    - name: Set web on 443 fact
+      ansible.builtin.set_fact:
+        web_on_443: "{{ 'yes' in (web443.stdout | default('')) }}"
+
+    - name: Add Port 443 to sshd when 443 is free
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        line: "Port 443"
+        state: present
+      when: not web_on_443
+
+    - name: Install sslh for SSH+HTTPS multiplex on 443
+      ansible.builtin.apt:
+        name: sslh
+        state: present
+        update_cache: true
+      when: web_on_443
+
+    - name: Configure sslh when web server uses 443
+      when: web_on_443
+      block:
+        - name: Move nginx to 8443 if nginx on 443
+          ansible.builtin.shell: |
+            set -o pipefail
+            if ss -tlnp | grep -q nginx.*443; then
+              if [[ -f /etc/nginx/sites-enabled/default ]]; then
+                sed -i 's/listen 443 ssl/listen 8443 ssl/g' /etc/nginx/sites-enabled/default 2>/dev/null || true
+                sed -i 's/listen \[::\]:443 ssl/listen [::]:8443 ssl/g' /etc/nginx/sites-enabled/default 2>/dev/null || true
+              fi
+              systemctl reload nginx 2>/dev/null || true
+            fi
+          args:
+            executable: /bin/bash
+          changed_when: false
+          failed_when: false
+
+        - name: Write sslh systemd override
+          ansible.builtin.copy:
+            dest: /etc/default/sslh
+            mode: "0644"
+            content: |
+              RUN=yes
+              DAEMON_OPTS="--user sslh --listen 0.0.0.0:443 --ssh 127.0.0.1:22 --ssl 127.0.0.1:8443 --timeout 2"
+          notify: Restart sslh
+
+        - name: Enable and start sslh
+          ansible.builtin.systemd:
+            name: sslh
+            enabled: true
+            state: started
+          failed_when: false
+
+    - name: Validate sshd config
+      ansible.builtin.command:
+        argv: [sshd, -t]
+      changed_when: false
+      when: not web_on_443
+
+    - name: Reload sshd
+      ansible.builtin.service:
+        name: sshd
+        state: reloaded
+      when: not web_on_443
+
+    - name: Verify sshd or sslh listening on 443
+      ansible.builtin.shell: |
+        set -o pipefail
+        echo "=== AFTER ==="
+        ss -tlnp | grep -E ':443 |:22 |:8443 ' || true
+        echo ""
+        echo "=== SSH local test port 443 ==="
+        ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=5 \
+          -p 443 -i /root/.ssh/id_ed25519 root@127.0.0.1 echo SSH_443_OK 2>&1 || \
+        ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=5 \
+          -p 443 root@127.0.0.1 echo SSH_443_OK 2>&1 || true
+      args:
+        executable: /bin/bash
+      register: after_check
+      changed_when: false
+      failed_when: false
+
+    - name: Print result and connection instructions
+      ansible.builtin.debug:
+        msg:
+          - "{{ after_check.stdout_lines }}"
+          - ""
+          - "Connect with:"
+          - "  ssh -p 443 -i ~/.ssh/media_id_ed25519 root@209.38.146.146"
+          - "  ssh -p 443 -J root@209.38.146.146:443 -i ~/.ssh/media_id_ed25519 root@64.23.139.247"
+          - "web_on_443={{ web_on_443 }} (sslh used if true)"
+
+  handlers:
+    - name: Restart sslh
+      ansible.builtin.systemd:
+        name: sslh
+        state: restarted

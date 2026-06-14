@@ -1,0 +1,43 @@
+---
+- name: Setup socat relay on Semaphore controller
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Install socat if missing
+      ansible.builtin.apt:
+        name: socat
+        state: present
+        update_cache: true
+
+    - name: Kill any existing relay
+      ansible.builtin.shell: pkill -f "socat.*2222" || true
+      changed_when: false
+      failed_when: false
+
+    - name: Start TCP relay on port 2222 to target
+      ansible.builtin.shell: |
+        set -uo pipefail
+        nohup socat \
+          TCP-LISTEN:2222,fork,reuseaddr,bind=0.0.0.0 \
+          TCP:64.23.139.247:22 \
+          > /tmp/socat.log 2>&1 &
+        echo "Socat PID: $!"
+        sleep 2
+        ss -tlnp | grep 2222 || true
+        cat /tmp/socat.log 2>/dev/null || true
+      args:
+        executable: /bin/bash
+      register: socat_start
+      changed_when: false
+      failed_when: false
+
+    - name: Print relay status
+      ansible.builtin.debug:
+        msg:
+          - "{{ socat_start.stdout_lines }}"
+          - ""
+          - "Connect locally:"
+          - "  ssh -p 2222 -i ~/.ssh/media_id_ed25519 -o StrictHostKeyChecking=no root@209.38.146.146"
+          - "Requires port 2222 open in DO firewall on controller"
