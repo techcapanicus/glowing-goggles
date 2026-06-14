@@ -1,0 +1,87 @@
+---
+- name: Setup ProxyJump access chain
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Read server private key
+      ansible.builtin.command:
+        argv: [cat, /root/.ssh/id_ed25519]
+      register: server_privkey
+      changed_when: false
+      no_log: false
+
+    - name: Read server public key
+      ansible.builtin.command:
+        argv: [cat, /root/.ssh/id_ed25519.pub]
+      register: server_pubkey
+      changed_when: false
+
+    - name: Add server pubkey to its own authorized_keys
+      ansible.posix.authorized_key:
+        user: root
+        state: present
+        key: "{{ server_pubkey.stdout }}"
+
+    - name: Add server pubkey to Semaphore controller
+      ansible.posix.authorized_key:
+        user: root
+        state: present
+        key: "{{ server_pubkey.stdout }}"
+      delegate_to: localhost
+      become: false
+
+    - name: Check what keys Semaphore controller accepts
+      ansible.builtin.command:
+        argv: [cat, /root/.ssh/authorized_keys]
+      delegate_to: localhost
+      become: false
+      register: controller_keys
+      changed_when: false
+
+    - name: Add our target pubkeys to controller too
+      ansible.posix.authorized_key:
+        user: root
+        state: present
+        key: "{{ item }}"
+      delegate_to: localhost
+      become: false
+      loop:
+        - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExC7wVTlqvZ1vqgHPTVUU7nVhdTPlPfWmO2ApZVeNhj root@media"
+
+    - name: Print extracted private key and instructions
+      ansible.builtin.debug:
+        msg:
+          - "========================================="
+          - "PRIVATE KEY FOR PROXYJUMP (save to file):"
+          - "========================================="
+          - "{{ server_privkey.stdout }}"
+          - ""
+          - "========================================="
+          - "CONTROLLER AUTHORIZED KEYS:"
+          - "========================================="
+          - "{{ controller_keys.stdout }}"
+          - ""
+          - "========================================="
+          - "CONNECTION INSTRUCTIONS:"
+          - "========================================="
+          - "1. Save the private key above to:"
+          - "   ~/.ssh/media_id_ed25519"
+          - "   chmod 600 ~/.ssh/media_id_ed25519"
+          - ""
+          - "2. Add to ~/.ssh/config:"
+          - "   Host semaphore-jump"
+          - "     HostName 209.38.146.146"
+          - "     User root"
+          - "     IdentityFile ~/.ssh/media_id_ed25519"
+          - "     StrictHostKeyChecking no"
+          - ""
+          - "   Host media"
+          - "     HostName 64.23.139.247"
+          - "     User root"
+          - "     IdentityFile ~/.ssh/media_id_ed25519"
+          - "     ProxyJump semaphore-jump"
+          - "     StrictHostKeyChecking no"
+          - ""
+          - "3. Then just run: ssh media"
+          - "========================================="
