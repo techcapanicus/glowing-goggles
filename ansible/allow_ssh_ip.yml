@@ -7,7 +7,7 @@
   become: true
   vars:
     allowed_ip: "{{ allowed_ip | mandatory }}"
-    allowed_ssh_port: "{{ allowed_ssh_port | default(22) }}"
+    trusted_port: 22
   tasks:
     - name: Check if ufw is installed
       ansible.builtin.command: which ufw
@@ -18,10 +18,10 @@
     - name: Allow SSH from trusted IP via ufw
       ansible.builtin.shell: |
         set -euo pipefail
-        if ufw status | grep -Eq "{{ allowed_ip }}.*{{ allowed_ssh_port }}"; then
+        if ufw status | grep -Eq "{{ allowed_ip }}.*{{ trusted_port }}"; then
           echo "ufw rule already present"
         else
-          ufw allow from {{ allowed_ip }} to any port {{ allowed_ssh_port }} proto tcp
+          ufw allow from {{ allowed_ip }} to any port {{ trusted_port }} proto tcp
         fi
       args:
         executable: /bin/bash
@@ -40,7 +40,7 @@
           - -p
           - tcp
           - --dport
-          - "{{ allowed_ssh_port | string }}"
+          - "{{ trusted_port }}"
           - -j
           - ACCEPT
       register: iptables_check
@@ -58,7 +58,7 @@
           - -p
           - tcp
           - --dport
-          - "{{ allowed_ssh_port | string }}"
+          - "{{ trusted_port }}"
           - -j
           - ACCEPT
       when: iptables_check.rc != 0
