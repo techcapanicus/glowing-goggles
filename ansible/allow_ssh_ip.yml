@@ -1,0 +1,84 @@
+---
+# Allow inbound SSH from a trusted source IP on the target host.
+# Uses only ansible.builtin modules (no external collections).
+- name: Allow SSH from trusted IP
+  hosts: all
+  gather_facts: false
+  become: true
+  vars:
+    allowed_ip: "{{ allowed_ip | mandatory }}"
+    ssh_port: "{{ ssh_port | default(22) }}"
+  tasks:
+    - name: Check if ufw is installed
+      ansible.builtin.command: which ufw
+      register: ufw_bin
+      changed_when: false
+      failed_when: false
+
+    - name: Allow SSH from trusted IP via ufw
+      ansible.builtin.shell: |
+        set -euo pipefail
+        if ufw status | grep -Eq "{{ allowed_ip }}.*{{ ssh_port }}"; then
+          echo "ufw rule already present"
+        else
+          ufw allow from {{ allowed_ip }} to any port {{ ssh_port }} proto tcp
+        fi
+      args:
+        executable: /bin/bash
+      when: ufw_bin.rc == 0
+      register: ufw_allow
+      changed_when: "'ufw rule already present' not in ufw_allow.stdout"
+
+    - name: Check for existing iptables SSH allow rule
+      ansible.builtin.command:
+        argv:
+          - iptables
+          - -C
+          - INPUT
+          - -s
+          - "{{ allowed_ip }}"
+          - -p
+          - tcp
+          - --dport
+          - "{{ ssh_port | string }}"
+          - -j
+          - ACCEPT
+      register: iptables_check
+      changed_when: false
+      failed_when: false
+
+    - name: Insert iptables rule allowing SSH from trusted IP
+      ansible.builtin.command:
+        argv:
+          - iptables
+          - -I
+          - INPUT
+          - -s
+          - "{{ allowed_ip }}"
+          - -p
+          - tcp
+          - --dport
+          - "{{ ssh_port | string }}"
+          - -j
+          - ACCEPT
+      when: iptables_check.rc != 0
+
+    - name: Allow SSH via TCP wrappers hosts.allow
+      ansible.builtin.lineinfile:
+        path: /etc/hosts.allow
+        line: "sshd: {{ allowed_ip }}"
+        state: present
+        create: true
+        mode: "0644"
+
+    - name: Unban trusted IP from fail2ban sshd jail
+      ansible.builtin.command:
+        argv:
+          - fail2ban-client
+          - set
+          - sshd
+          - unbanip
+          - "{{ allowed_ip }}"
+      register: fail2ban_unban
+      changed_when: false
+      failed_when: false

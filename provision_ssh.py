@@ -552,6 +552,9 @@ def build_parser():
     p.add_argument("--save-key-dir", default=env("SAVE_KEY_DIR"),
                    help="Directory to save (or reuse) the generated ed25519 "
                         "keypair locally (env SAVE_KEY_DIR)")
+    p.add_argument("--allowed-ip", default=env("ALLOWED_IP"),
+                   help="Source IP to allow for SSH (used by allow_ssh_ip.yml; "
+                        "env ALLOWED_IP)")
     p.add_argument("--dry-run", action="store_true",
                    help="Run the Ansible task in --check mode (no changes made)")
     p.add_argument("--no-run", action="store_true",
@@ -664,6 +667,8 @@ def main(argv=None):
         "bootstrap_user": bootstrap_user,
         "new_public_key": new_public_key,
     }
+    if args.allowed_ip:
+        extra_vars["allowed_ip"] = args.allowed_ip
     environment_id = ensure_environment(
         api, project_id, f"{args.prefix}-env", extra_vars)
     template_id = ensure_template(
