@@ -140,7 +140,7 @@ def main():
     p.add_argument("--username", default=os.environ.get("SEMAPHORE_USERNAME"))
     p.add_argument("--password", default=os.environ.get("SEMAPHORE_PASSWORD"))
     p.add_argument("--update-inventory", action="store_true")
-    p.add_argument("--ssh-key-id", type=int, default=4, help="Semaphore key (4=ansible)")
+    p.add_argument("--ssh-key-id", type=int, default=6, help="Semaphore key (6=asr)")
     p.add_argument("--ensure-template", action="store_true")
     p.add_argument("--whitelist-template", action="store_true")
     p.add_argument("--test-sipcore", action="store_true")
