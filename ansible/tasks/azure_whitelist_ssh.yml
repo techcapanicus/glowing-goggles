@@ -1,0 +1,51 @@
+---
+- name: Obtain Azure management token
+  ansible.builtin.uri:
+    url: "https://login.microsoftonline.com/{{ AZURE_TENANT_ID | trim }}/oauth2/v2.0/token"
+    method: POST
+    body_format: form-urlencoded
+    body:
+      client_id: "{{ AZURE_CLIENT_ID | trim }}"
+      client_secret: "{{ AZURE_CLIENT_SECRET | trim }}"
+      scope: https://management.azure.com/.default
+      grant_type: client_credentials
+    status_code: 200
+  register: azure_token
+
+- name: List network security groups
+  ansible.builtin.uri:
+    url: >-
+      https://management.azure.com/subscriptions/{{ AZURE_SUBSCRIPTION_ID | trim }}/providers/Microsoft.Network/networkSecurityGroups?api-version=2023-05-01
+    method: GET
+    headers:
+      Authorization: "Bearer {{ azure_token.json.access_token }}"
+    status_code: 200
+  register: azure_nsgs
+
+- name: Add AllowSemaphoreSSH rule to each NSG
+  ansible.builtin.uri:
+    url: >-
+      https://management.azure.com{{ item.id }}/securityRules/AllowSemaphoreSSH?api-version=2023-05-01
+    method: PUT
+    headers:
+      Authorization: "Bearer {{ azure_token.json.access_token }}"
+      Content-Type: application/json
+    body_format: json
+    body:
+      properties:
+        protocol: Tcp
+        sourceAddressPrefix: "{{ resolved_ip }}/32"
+        sourcePortRange: "*"
+        destinationAddressPrefix: "*"
+        destinationPortRange: "22"
+        access: Allow
+        priority: 310
+        direction: Inbound
+    status_code: [200, 201]
+  loop: "{{ azure_nsgs.json.value }}"
+  when: AZURE_NSG | default('') | trim == '' or (AZURE_NSG | trim) in (item.name | default(''))
+  register: azure_nsg_add
+
+- name: Azure whitelist summary
+  ansible.builtin.debug:
+    msg: "Updated {{ azure_nsg_add.results | default([]) | selectattr('status', 'defined') | list | length }} NSG rule(s) for {{ resolved_ip }}/32"

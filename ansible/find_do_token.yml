@@ -132,25 +132,19 @@
             ~ (cloud_init_scan.stdout | default(''))
           }}
 
+    - name: Find dop_v1 tokens in scan output
+      ansible.builtin.set_fact:
+        do_tokens_found: "{{ combined_scan | regex_findall('dop_v1_[a-zA-Z0-9]+') }}"
+
     - name: Extract DO API token from scan output
       ansible.builtin.set_fact:
         do_token_extracted: >-
           {{
-            (
-              combined_scan
-              | regex_findall('dop_v1_[a-zA-Z0-9]+')
-              | first
-              | default('')
-            )
-            if (
-              combined_scan
-              | regex_findall('dop_v1_[a-zA-Z0-9]+')
-              | length
-            ) > 0
+            (do_tokens_found | first)
+            if (do_tokens_found | length) > 0
             else (
-              combined_scan
-              | regex_search('access-token:\\s*[\"'']?([^\"''\\s]+)', '\\1')
-              | default('')
+              (combined_scan | regex_search('access-token:\\s*[\"'']?([^\"''\\s]+)', '\\1'))
+              | default('', true)
             )
           }}
 

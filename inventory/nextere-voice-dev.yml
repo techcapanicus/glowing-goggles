@@ -1,40 +1,40 @@
 ---
-# Nextere Voice — dev inventory (fixed YAML for Semaphore project 1 / inventory 2)
+# Nextere Voice — dev inventory (Azure hosts from deploy/ansible-playbooks/inventory/voice/dev)
 sipcore:
   hosts:
-    sipcore:
-      ansible_user: debian
-      ssh_user: debian
-      ansible_host: 149.130.210.6
-      private_ip_addr: 10.0.20.132
-      public_ip_addr: 149.130.210.6
+    sipcore2:
+      ansible_user: azureuser
+      ssh_user: azureuser
+      ansible_host: 172.178.82.217
+      private_ip_addr: 10.0.0.5
+      public_ip_addr: 172.178.82.217
 
 sipmedia:
   hosts:
-    sipmedia:
-      ansible_user: debian
-      ssh_user: debian
-      ansible_host: 207.211.178.181
-      private_ip_addr: 10.0.20.107
-      public_ip_addr: 207.211.178.181
+    sipmedia2:
+      ansible_user: azureuser
+      ssh_user: azureuser
+      ansible_host: 48.217.232.252
+      private_ip_addr: 10.0.0.6
+      public_ip_addr: 48.217.232.252
 
 sipproxy:
   hosts:
-    sipproxy:
-      ansible_user: debian
-      ssh_user: debian
-      ansible_host: 164.152.109.114
-      private_ip_addr: 10.0.20.194
-      public_ip_addr: 164.152.109.114
+    sipproxy2:
+      ansible_user: azureuser
+      ssh_user: azureuser
+      ansible_host: 172.203.226.201
+      private_ip_addr: 10.0.0.4
+      public_ip_addr: 172.203.226.201
 
 web:
   hosts:
-    web:
-      ansible_user: ubuntu
-      ansible_host: 149.130.213.171
-      private_ip_addr: 10.0.20.114
-      public_ip_addr: 149.130.213.171
-      ansible_become_flags: "-E"
+    web2:
+      ansible_user: azureuser
+      ssh_user: azureuser
+      ansible_host: 172.203.226.201
+      private_ip_addr: 10.0.0.4
+      public_ip_addr: 172.203.226.201
 
 asr:
   hosts:
