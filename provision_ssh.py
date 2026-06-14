@@ -43,10 +43,14 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 
 DEFAULT_PROJECT_NAME = "ssh-provisioning"
 DEFAULT_PLAYBOOK = "provision_ssh.yml"
 DEFAULT_BRANCH = "master"
+POLL_BACKOFF_INITIAL = 10
+POLL_BACKOFF_MAX = 60
 
 # --------------------------------------------------------------------------- #
 # Embedded, idempotent playbook.
@@ -109,9 +113,10 @@ PLAYBOOK_CONTENT = """\
 class ApiError(Exception):
     """Raised when the Semaphore API returns a non-2xx response."""
 
-    def __init__(self, method, path, status, body):
+    def __init__(self, method, path, status, body, retry_after=None):
         self.status = status
         self.body = body
+        self.retry_after = retry_after
         super().__init__(f"{method} {path} -> HTTP {status}: {body}")
 
 
@@ -149,7 +154,11 @@ class Semaphore:
                 status = resp.status
         except urllib.error.HTTPError as exc:
             body = exc.read().decode("utf-8", "replace")
-            raise ApiError(method, path, exc.code, body) from None
+            retry_after = None
+            if exc.code == 429:
+                retry_after = parse_retry_after(exc.headers.get("Retry-After"))
+            raise ApiError(method, path, exc.code, body,
+                           retry_after=retry_after) from None
         except urllib.error.URLError as exc:
             raise ApiError(method, path, 0, f"network error: {exc.reason}") from None
 
@@ -185,6 +194,38 @@ def warn(msg):
 def die(msg, code=1):
     print(f"[x] {msg}", file=sys.stderr)
     sys.exit(code)
+
+
+def parse_retry_after(header_value):
+    """Return seconds to wait from a Retry-After header, or None."""
+    if not header_value:
+        return None
+    header_value = header_value.strip()
+    try:
+        return max(0, int(header_value))
+    except ValueError:
+        pass
+    try:
+        retry_at = parsedate_to_datetime(header_value)
+        if retry_at.tzinfo is None:
+            retry_at = retry_at.replace(tzinfo=timezone.utc)
+        delta = (retry_at - datetime.now(timezone.utc)).total_seconds()
+        return max(0, int(delta))
+    except (TypeError, ValueError, OverflowError):
+        return None
+
+
+def poll_get(api, path, fallback_wait):
+    """GET with 429 handling: honor Retry-After before retrying."""
+    while True:
+        try:
+            return api.get(path)
+        except ApiError as exc:
+            if exc.status != 429:
+                raise
+            wait = exc.retry_after if exc.retry_after is not None else fallback_wait
+            warn(f"Rate limited (HTTP 429); waiting {wait}s before retry")
+            time.sleep(wait)
 
 
 def load_dotenv(path=".env"):
@@ -437,15 +478,18 @@ def run_and_poll(api, project_id, template_id, extra_vars, dry_run, poll_interva
 
     terminal = {"success", "error", "failed", "stopped"}
     last_status = None
+    poll_delay = min(max(poll_interval, POLL_BACKOFF_INITIAL), POLL_BACKOFF_MAX)
+    task_path = f"/api/project/{project_id}/tasks/{task_id}"
     while True:
-        current = api.get(f"/api/project/{project_id}/tasks/{task_id}")
+        current = poll_get(api, task_path, poll_delay)
         status = current.get("status")
         if status != last_status:
             info(f"Task #{task_id} status: {status}")
             last_status = status
         if status in terminal:
             break
-        time.sleep(poll_interval)
+        time.sleep(poll_delay)
+        poll_delay = min(poll_delay * 2, POLL_BACKOFF_MAX)
 
     print("\n----- task output -----")
     output = api.get(f"/api/project/{project_id}/tasks/{task_id}/output")
@@ -512,8 +556,9 @@ def build_parser():
                    help="Run the Ansible task in --check mode (no changes made)")
     p.add_argument("--no-run", action="store_true",
                    help="Set everything up but do not start a task")
-    p.add_argument("--poll-interval", type=int, default=5,
-                   help="Seconds between task status polls")
+    p.add_argument("--poll-interval", type=int, default=POLL_BACKOFF_INITIAL,
+                   help="Initial seconds between task status polls "
+                        f"(doubles each poll up to {POLL_BACKOFF_MAX}s)")
     p.add_argument("--verbose", action="store_true", help="Log every API request")
     return p
 
