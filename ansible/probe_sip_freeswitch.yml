@@ -1,0 +1,41 @@
+---
+- name: Probe FreeSWITCH and SIP stack on each host
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Detect SIP/FreeSWITCH services
+      ansible.builtin.shell: |
+        set -uo pipefail
+        echo "HOST=$(hostname)"
+        echo "PUBLIC_IP=$(curl -sf http://169.254.169.254/metadata/v1/interfaces/public/0/ipv4/address 2>/dev/null || hostname -I | awk '{print $1}')"
+        echo "--- SERVICES ---"
+        for svc in freeswitch kamailio opensips asterisk rtpengine rtpproxy; do
+          st=$(systemctl is-active "$svc" 2>/dev/null || echo inactive)
+          [[ "$st" == "active" ]] && echo "SERVICE_ACTIVE $svc"
+        done
+        echo "--- PROCESSES ---"
+        ps aux 2>/dev/null | grep -iE '[f]reeswitch|[k]amailio|[o]pensips|[a]sterisk|[r]tpengine|[r]tpproxy' | awk '{print $11, $12}' | head -10
+        echo "--- SIP PORTS ---"
+        ss -tlnup 2>/dev/null | grep -E ':506[0-9]|:508[0-9]|:8021|:7443' || true
+        echo "--- FS_CLI ---"
+        if command -v fs_cli >/dev/null 2>&1; then
+          fs_cli -x 'status' 2>/dev/null | head -5 || echo "fs_cli present but not responding"
+        else
+          echo "no fs_cli"
+        fi
+        echo "--- DOCKER SIP ---"
+        docker ps --format '{{.Names}} {{.Image}}' 2>/dev/null | grep -iE 'freeswitch|kamailio|sip|asterisk|rtp' | head -10 || true
+        echo "--- OUTBOUND CAPABILITY HINTS ---"
+        ls /etc/freeswitch 2>/dev/null | head -3 && echo "has /etc/freeswitch"
+        ls /etc/kamailio 2>/dev/null | head -3 && echo "has /etc/kamailio"
+        grep -rli 'gateway\|dialplan\|originate\|outbound' /etc/freeswitch 2>/dev/null | head -5 || true
+      args:
+        executable: /bin/bash
+      register: probe
+      changed_when: false
+      failed_when: false
+      become: true
+
+    - name: Show probe results
+      ansible.builtin.debug:
+        msg: "{{ probe.stdout_lines }}"
