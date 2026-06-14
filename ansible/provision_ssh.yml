@@ -3,6 +3,7 @@
 #
 # Bootstrap SSH: Semaphore inventory ssh_key_id (e.g. deployment key 303).
 # Extra vars: target_user, new_public_key; optional new_private_key for self-test.
+# Optional DO Cloud Firewall: doctl_token, do_firewall_id (or auto-detect via droplet IP).
 - name: Provision SSH key access
   hosts: all
   gather_facts: false
@@ -11,7 +12,10 @@
     target_user: "{{ target_user | mandatory }}"
     new_public_key: "{{ new_public_key | mandatory }}"
     new_private_key: "{{ new_private_key | default('') }}"
+    doctl_token: "{{ doctl_token | default('') }}"
+    do_firewall_id: "{{ do_firewall_id | default('') }}"
     ssh_connect_host: "{{ ansible_host | default(inventory_hostname) }}"
+    do_firewall_script: "{{ playbook_dir }}/../scripts/do_firewall_ssh.py"
     ssh_dir: >-
       {{ '/root/.ssh' if target_user == 'root'
          else '/home/' + target_user + '/.ssh' }}
@@ -312,12 +316,142 @@
         var: ssh_test.stderr_lines
       when: new_private_key | length > 0
 
-    - name: Report SSH self-test result
+    - name: Report SSH self-test result (before DO firewall)
       ansible.builtin.debug:
         msg: >-
-          SSH self-test from controller: {{
+          SSH self-test from controller (initial): {{
             'SUCCESS (SSH_AUTH_OK)' if (ssh_test.rc | default(1)) == 0
             else 'FAILED rc=' ~ (ssh_test.rc | default('?'))
+          }}
+      when: new_private_key | length > 0
+
+    # --- DigitalOcean Cloud Firewall (controller IP) -----------------------
+    - name: Detect controller public IP via ipify
+      ansible.builtin.uri:
+        url: https://api.ipify.org
+        return_content: true
+        timeout: 15
+      delegate_to: localhost
+      become: false
+      register: controller_ip_ipify
+      changed_when: false
+      failed_when: false
+      when:
+        - new_private_key | length > 0
+        - doctl_token | length > 0
+
+    - name: Detect controller public IP via checkip (fallback)
+      ansible.builtin.uri:
+        url: https://checkip.amazonaws.com
+        return_content: true
+        timeout: 15
+      delegate_to: localhost
+      become: false
+      register: controller_ip_checkip
+      changed_when: false
+      failed_when: false
+      when:
+        - new_private_key | length > 0
+        - doctl_token | length > 0
+        - controller_ip_ipify.content is not defined
+          or (controller_ip_ipify.content | default('') | trim) == ''
+
+    - name: Set controller public IP fact
+      ansible.builtin.set_fact:
+        controller_public_ip: >-
+          {{
+            (controller_ip_ipify.content | default('') | trim)
+            if (controller_ip_ipify.content | default('') | trim) != ''
+            else (controller_ip_checkip.content | default('') | trim)
+          }}
+      when:
+        - new_private_key | length > 0
+        - doctl_token | length > 0
+
+    - name: Build DO firewall command argv
+      ansible.builtin.set_fact:
+        do_firewall_argv: >-
+          {{
+            ['python3', do_firewall_script, '--ip', controller_public_ip]
+            + (['--firewall-id', do_firewall_id]
+               if do_firewall_id | length > 0 else [])
+            + ['--droplet-ip', ssh_connect_host]
+          }}
+      when:
+        - new_private_key | length > 0
+        - doctl_token | length > 0
+        - controller_public_ip is defined
+        - controller_public_ip | length > 0
+
+    - name: Allow controller IP on DigitalOcean Cloud Firewall
+      ansible.builtin.command:
+        argv: "{{ do_firewall_argv }}"
+      environment:
+        DOCTL_TOKEN: "{{ doctl_token }}"
+      delegate_to: localhost
+      become: false
+      register: do_firewall_result
+      changed_when: "'added inbound SSH' in (do_firewall_result.stdout | default(''))"
+      when: do_firewall_argv is defined
+
+    - name: Print DigitalOcean firewall result
+      ansible.builtin.debug:
+        var: do_firewall_result.stdout_lines
+      when: do_firewall_result is defined
+
+    - name: Wait for Cloud Firewall rule propagation
+      ansible.builtin.pause:
+        seconds: 5
+      delegate_to: localhost
+      become: false
+      when: do_firewall_result is defined
+
+    - name: Re-test SSH auth after Cloud Firewall update
+      ansible.builtin.command:
+        argv:
+          - ssh
+          - -vvv
+          - -i
+          - "{{ controller_key_path }}"
+          - -o
+          - StrictHostKeyChecking=no
+          - -o
+          - BatchMode=yes
+          - -o
+          - ConnectTimeout=10
+          - "{{ target_user }}@{{ ssh_connect_host }}"
+          - echo SSH_AUTH_OK
+      delegate_to: localhost
+      become: false
+      register: ssh_test_retry
+      changed_when: false
+      failed_when: false
+      when: do_firewall_result is defined
+
+    - name: Print SSH retry stdout
+      ansible.builtin.debug:
+        var: ssh_test_retry.stdout_lines
+      when: ssh_test_retry is defined
+
+    - name: Print SSH retry stderr (auth debug)
+      ansible.builtin.debug:
+        var: ssh_test_retry.stderr_lines
+      when: ssh_test_retry is defined
+
+    - name: Report SSH self-test result (final)
+      ansible.builtin.debug:
+        msg: >-
+          SSH self-test from controller{{
+            ' after DO firewall' if ssh_test_retry is defined else ''
+          }}: {{
+            'SUCCESS (SSH_AUTH_OK)' if (
+              (ssh_test_retry.rc if ssh_test_retry is defined else ssh_test.rc)
+              | default(1)
+            ) == 0
+            else 'FAILED rc=' ~ (
+              (ssh_test_retry.rc if ssh_test_retry is defined else ssh_test.rc)
+              | default('?')
+            )
           }}
       when: new_private_key | length > 0
 

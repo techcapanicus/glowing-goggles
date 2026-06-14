@@ -241,12 +241,16 @@ def find_by_name(items, name):
 
 
 def build_local_repo(workdir):
-    """Copy ansible/ into a fresh local git repo; return its path."""
+    """Copy ansible/ and scripts/ into a fresh local git repo; return its path."""
     repo_dir = os.path.join(workdir, "playbook-repo")
     if not os.path.isdir(PLAYBOOK_SOURCE_DIR):
         die(f"Missing playbook source directory: {PLAYBOOK_SOURCE_DIR}")
     shutil.copytree(PLAYBOOK_SOURCE_DIR, os.path.join(repo_dir, "ansible"),
                     dirs_exist_ok=True)
+    scripts_src = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scripts")
+    if os.path.isdir(scripts_src):
+        shutil.copytree(scripts_src, os.path.join(repo_dir, "scripts"),
+                        dirs_exist_ok=True)
     env = {**os.environ, "GIT_AUTHOR_NAME": "provisioner",
            "GIT_AUTHOR_EMAIL": "provisioner@local",
            "GIT_COMMITTER_NAME": "provisioner",
@@ -518,6 +522,12 @@ def build_parser():
     p.add_argument("--allowed-ip", default=env("ALLOWED_IP"),
                    help="Source IP to allow for SSH (used by allow_ssh_ip.yml; "
                         "env ALLOWED_IP)")
+    p.add_argument("--doctl-token", default=env("DOCTL_TOKEN"),
+                   help="DigitalOcean API token for Cloud Firewall SSH allow "
+                        "(env DOCTL_TOKEN)")
+    p.add_argument("--do-firewall-id", default=env("DO_FIREWALL_ID"),
+                   help="DO Cloud Firewall UUID; auto-detected from droplet IP "
+                        "if omitted (env DO_FIREWALL_ID)")
     p.add_argument("--dry-run", action="store_true",
                    help="Run the Ansible task in --check mode (no changes made)")
     p.add_argument("--no-run", action="store_true",
@@ -640,6 +650,10 @@ def main(argv=None):
         extra_vars["new_private_key"] = new_private_key
     if args.allowed_ip:
         extra_vars["allowed_ip"] = args.allowed_ip
+    if args.doctl_token:
+        extra_vars["doctl_token"] = args.doctl_token
+    if args.do_firewall_id:
+        extra_vars["do_firewall_id"] = args.do_firewall_id
     environment_id = ensure_environment(
         api, project_id, f"{args.prefix}-env", extra_vars)
     template_id = ensure_template(
