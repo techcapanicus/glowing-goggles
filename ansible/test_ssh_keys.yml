@@ -8,10 +8,9 @@
 
   tasks:
     - name: Test private keys on droplet
-      ansible.builtin.command:
-        argv:
-          - /bin/bash
-          - "{{ playbook_dir }}/../scripts/test_ssh_keys.sh"
+      ansible.builtin.script:
+        cmd: "{{ playbook_dir }}/../scripts/test_ssh_keys.sh"
+        executable: /bin/bash
       environment:
         TARGET_HOST: "{{ ssh_target }}"
         TARGET_USER: "{{ ssh_user }}"
@@ -19,6 +18,11 @@
       register: droplet_tests
       changed_when: false
       failed_when: false
+
+    - name: Show droplet test stderr if stdout empty
+      ansible.builtin.debug:
+        msg: "droplet stderr: {{ droplet_tests.stderr_lines | default([]) }}"
+      when: droplet_tests.stdout_lines | default([]) | length == 0
 
     - name: Show droplet key test results
       ansible.builtin.debug:
@@ -39,10 +43,9 @@
           {{ hostvars[groups['all'][0]]['ansible_ssh_private_key_file'] | default('') }}
 
     - name: Test private keys on controller
-      ansible.builtin.command:
-        argv:
-          - /bin/bash
-          - "{{ playbook_dir }}/../scripts/test_ssh_keys.sh"
+      ansible.builtin.script:
+        cmd: "{{ playbook_dir }}/../scripts/test_ssh_keys.sh"
+        executable: /bin/bash
       environment:
         TARGET_HOST: "{{ ssh_target }}"
         TARGET_USER: "{{ ssh_user }}"

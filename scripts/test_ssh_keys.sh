@@ -52,7 +52,7 @@ add_key() {
 [[ -n "$EXTRA_KEY" ]] && add_key "$EXTRA_KEY"
 while IFS= read -r k; do
   add_key "$k"
-done < <(find /tmp/semaphore /root/.ssh /home -type f \
+done < <(find /tmp/semaphore /var/lib/semaphore /root/.ssh /home -type f \
   \( -name 'id_*' -o -name '*_ed25519' -o -name '*_rsa' \
   -o -name '*_ecdsa' -o -name '*_dsa' \) \
   ! -name '*.pub' ! -name 'known_hosts' \
