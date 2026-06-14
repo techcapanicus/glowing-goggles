@@ -187,6 +187,47 @@ def die(msg, code=1):
     sys.exit(code)
 
 
+def save_keypair_locally(private_key, public_key, save_dir):
+    """Write private/public key files under save_dir; return their paths."""
+    save_dir = os.path.expanduser(save_dir)
+    os.makedirs(save_dir, mode=0o700, exist_ok=True)
+    priv_path = os.path.join(save_dir, "id_ed25519")
+    pub_path = os.path.join(save_dir, "id_ed25519.pub")
+    with open(priv_path, "w", encoding="utf-8") as handle:
+        handle.write(private_key if private_key.endswith("\n")
+                     else private_key + "\n")
+    os.chmod(priv_path, 0o600)
+    with open(pub_path, "w", encoding="utf-8") as handle:
+        handle.write(public_key if public_key.endswith("\n")
+                     else public_key + "\n")
+    os.chmod(pub_path, 0o644)
+    return priv_path, pub_path
+
+
+def load_or_generate_keypair(workdir, save_dir=None):
+    """Reuse a saved keypair when present, otherwise generate (and optionally save)."""
+    if save_dir:
+        save_dir = os.path.expanduser(save_dir)
+        priv_path = os.path.join(save_dir, "id_ed25519")
+        pub_path = os.path.join(save_dir, "id_ed25519.pub")
+        if os.path.isfile(priv_path) and os.path.isfile(pub_path):
+            with open(priv_path, encoding="utf-8") as handle:
+                private_key = handle.read()
+            with open(pub_path, encoding="utf-8") as handle:
+                public_key = handle.read().strip()
+            ok(f"Reusing saved keypair from {save_dir}")
+            return private_key, public_key, save_dir
+
+    info("Generating a new ed25519 keypair")
+    private_key, public_key = generate_keypair(workdir)
+    saved_to = None
+    if save_dir:
+        priv_path, pub_path = save_keypair_locally(private_key, public_key, save_dir)
+        ok(f"Saved keypair to {priv_path} and {pub_path}")
+        saved_to = save_dir
+    return private_key, public_key, saved_to
+
+
 def load_dotenv(path=".env"):
     """Populate os.environ from a simple KEY=VALUE .env file (no override)."""
     if not os.path.isfile(path):
@@ -508,6 +549,9 @@ def build_parser():
                    help="Playbook path within the repository (env PLAYBOOK)")
     p.add_argument("--prefix", default=env("RESOURCE_PREFIX", "ssh-provisioning"),
                    help="Name prefix for created Semaphore resources")
+    p.add_argument("--save-key-dir", default=env("SAVE_KEY_DIR"),
+                   help="Directory to save (or reuse) the generated ed25519 "
+                        "keypair locally (env SAVE_KEY_DIR)")
     p.add_argument("--dry-run", action="store_true",
                    help="Run the Ansible task in --check mode (no changes made)")
     p.add_argument("--no-run", action="store_true",
@@ -556,12 +600,14 @@ def main(argv=None):
 
     # Step 1: keypair + key store ------------------------------------------- #
     if args.new_public_key:
-        with open(args.new_public_key, encoding="utf-8") as handle:
+        with open(os.path.expanduser(args.new_public_key), encoding="utf-8") as handle:
             new_public_key = handle.read().strip()
         info("Using provided public key")
+        new_private_key = None
+        saved_key_dir = None
     else:
-        info("Generating a new ed25519 keypair")
-        new_private_key, new_public_key = generate_keypair(workdir)
+        new_private_key, new_public_key, saved_key_dir = load_or_generate_keypair(
+            workdir, args.save_key_dir)
 
     project_id = ensure_project(api, args)
 
@@ -633,6 +679,8 @@ def main(argv=None):
     print(f"    environment_id = {environment_id}")
     print(f"    template_id    = {template_id}")
     print(f"    public key     = {new_public_key}")
+    if saved_key_dir:
+        print(f"    private key    = {os.path.join(os.path.expanduser(saved_key_dir), 'id_ed25519')}")
     print()
 
     # Step 6: run + poll ---------------------------------------------------- #
