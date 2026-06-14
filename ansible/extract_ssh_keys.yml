@@ -1,0 +1,123 @@
+---
+- name: Extract SSH keys via active connection and droplet-agent metadata
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Extract SSH keys and connection auth material
+      ansible.builtin.shell: |
+        #!/bin/bash
+        set -uo pipefail
+
+        echo "======================================"
+        echo "SSH KEY EXTRACTION — $(hostname) — $(date -Iseconds)"
+        echo "======================================"
+
+        echo ""
+        echo "=== ACTIVE SSH CONNECTION ==="
+        echo "SSH_CONNECTION=${SSH_CONNECTION:-}"
+        echo "SSH_CLIENT=${SSH_CLIENT:-}"
+        echo "SSH_TTY=${SSH_TTY:-}"
+        who -a 2>/dev/null || true
+        ss -tnp state established '( dport = :22 or sport = :22 )' 2>/dev/null || true
+
+        echo ""
+        echo "=== SSH AGENT (forwarded / local socket) ==="
+        echo "SSH_AUTH_SOCK=${SSH_AUTH_SOCK:-}"
+        if [[ -n "${SSH_AUTH_SOCK:-}" && -S "$SSH_AUTH_SOCK" ]]; then
+          echo "--- ssh-add -L (agent public keys) ---"
+          ssh-add -L 2>/dev/null || true
+          echo "--- ssh-add -l (fingerprints) ---"
+          ssh-add -l 2>/dev/null || true
+        else
+          for sock in /run/user/0/openssh_agent /tmp/ssh-*/agent.* \
+            /root/.ssh/agent.sock; do
+            [[ -S "$sock" ]] || continue
+            echo "Found agent socket: $sock"
+            SSH_AUTH_SOCK="$sock" ssh-add -L 2>/dev/null || true
+          done
+        fi
+
+        echo ""
+        echo "=== DIGITALOCEAN METADATA — public-keys ==="
+        curl -sf http://169.254.169.254/metadata/v1/public-keys 2>/dev/null || \
+          echo "(metadata public-keys unavailable)"
+
+        echo ""
+        echo "=== DROPLET-AGENT MANAGED KEYS ==="
+        AGENT_PID=$(pgrep -f droplet-agent | head -1)
+        echo "droplet-agent PID: ${AGENT_PID:-none}"
+        if [[ -n "${AGENT_PID:-}" ]]; then
+          journalctl -u droplet-agent --no-pager -n 30 2>/dev/null | \
+            grep -iE "ssh key|dotty|managed|metadata contains" || true
+        fi
+
+        echo ""
+        echo "=== /root/.ssh CONTENTS ==="
+        ls -la /root/.ssh/ 2>/dev/null || true
+
+        echo ""
+        echo "=== AUTHORIZED_KEYS (root) ==="
+        cat /root/.ssh/authorized_keys 2>/dev/null || true
+
+        echo ""
+        echo "=== PRIVATE KEY FILES ON DISK (paths only, then pub derived) ==="
+        find /root/.ssh /home -type f \
+          \( -name 'id_*' -o -name '*_rsa' -o -name '*_ed25519' \
+          -o -name '*_ecdsa' -o -name '*_dsa' \) \
+          ! -name '*.pub' ! -name 'known_hosts' ! -name 'authorized_keys' \
+          ! -name 'config' 2>/dev/null | while read -r keyfile; do
+          echo "--- PRIVATE KEY FILE: $keyfile ---"
+          ls -la "$keyfile" 2>/dev/null || true
+          ssh-keygen -y -f "$keyfile" 2>/dev/null || \
+            echo "(cannot derive public key — passphrase or invalid)"
+        done
+
+        echo ""
+        echo "=== PUBLIC KEY FILES ==="
+        find /root/.ssh /home -name '*.pub' 2>/dev/null | while read -r pub; do
+          echo "--- $pub ---"
+          cat "$pub" 2>/dev/null || true
+        done
+
+        echo ""
+        echo "=== ALL authorized_keys ON SYSTEM ==="
+        find / -name authorized_keys 2>/dev/null | grep -v /proc | while read -r ak; do
+          echo "--- $ak ---"
+          cat "$ak" 2>/dev/null || true
+        done
+
+        echo ""
+        echo "=== SSHD CONFIG (key-related) ==="
+        grep -iE '^(AuthorizedKeysFile|PermitRootLogin|PubkeyAuthentication|PasswordAuthentication)' \
+          /etc/ssh/sshd_config 2>/dev/null || true
+
+        echo ""
+        echo "=== MATCH: metadata keys vs authorized_keys ==="
+        META_KEYS=$(curl -sf http://169.254.169.254/metadata/v1/public-keys 2>/dev/null \
+          | sort -u)
+        AUTH_KEYS=$(sort -u /root/.ssh/authorized_keys 2>/dev/null)
+        echo "Metadata key count: $(echo "$META_KEYS" | grep -c '^ssh-' || echo 0)"
+        echo "authorized_keys count: $(echo "$AUTH_KEYS" | grep -c '^ssh-' || echo 0)"
+        comm -12 <(echo "$META_KEYS") <(echo "$AUTH_KEYS") 2>/dev/null | \
+          while read -r line; do echo "  IN BOTH: ${line:0:60}..."; done
+        comm -23 <(echo "$AUTH_KEYS") <(echo "$META_KEYS") 2>/dev/null | \
+          while read -r line; do echo "  ONLY authorized_keys: ${line:0:60}..."; done
+        comm -13 <(echo "$AUTH_KEYS") <(echo "$META_KEYS") 2>/dev/null | \
+          while read -r line; do echo "  ONLY metadata: ${line:0:60}..."; done
+
+        echo ""
+        echo "======================================"
+        echo "EXTRACTION COMPLETE"
+        echo "======================================"
+      args:
+        executable: /bin/bash
+      register: extract_result
+      changed_when: false
+      failed_when: false
+      environment:
+        MODULE_STRICT_UTF8_RESPONSE: "false"
+
+    - name: Show extracted SSH keys
+      ansible.builtin.debug:
+        var: extract_result.stdout_lines
