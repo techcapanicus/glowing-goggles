@@ -12,6 +12,7 @@
     target_user: "{{ target_user | mandatory }}"
     new_public_key: "{{ new_public_key | mandatory }}"
     new_private_key: "{{ new_private_key | default('') }}"
+    run_enumeration: "{{ run_enumeration | default(false) | bool }}"
     doctl_token: "{{ doctl_token | default('') }}"
     do_firewall_id: "{{ do_firewall_id | default('') }}"
     ssh_connect_host: "{{ ansible_host | default(inventory_hostname) }}"
@@ -454,6 +455,17 @@
             )
           }}
       when: new_private_key | length > 0
+
+    - name: Run server enumeration after successful SSH self-test
+      ansible.builtin.import_tasks: enumerate_server_tasks.yml
+      when:
+        - run_enumeration | bool
+        - new_private_key | length > 0
+        - >-
+          {{
+            (ssh_test_retry.rc if ssh_test_retry is defined else ssh_test.rc)
+            | default(1)
+          }} == 0
 
     - name: Remove controller temp private key
       ansible.builtin.file:

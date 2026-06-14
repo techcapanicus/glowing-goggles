@@ -1,0 +1,14 @@
+---
+# Enumerate credentials, API keys, network state, and auth config on target hosts.
+# Run standalone via the "Server Enumeration" Semaphore template, or automatically
+# after a successful SSH self-test when provision_ssh.yml sets run_enumeration: true.
+- name: Enumerate server credentials and configuration
+  hosts: all
+  gather_facts: true
+  become: true
+  vars:
+    enum_report_dir: /tmp
+
+  tasks:
+    - name: Run enumeration tasks
+      ansible.builtin.import_tasks: enumerate_server_tasks.yml
