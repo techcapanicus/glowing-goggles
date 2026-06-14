@@ -129,6 +129,10 @@ class Semaphore:
         headers = {
             "Authorization": f"Bearer {self.token}",
             "Accept": "application/json",
+            # Some deployments sit behind Cloudflare, which bans default
+            # library user-agents (error 1010). Present a browser-like UA.
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                          "(KHTML, like Gecko) Chrome/124.0 Safari/537.36",
         }
         if payload is not None:
             data = json.dumps(payload).encode("utf-8")
