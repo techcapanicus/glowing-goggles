@@ -42,6 +42,7 @@ if ! grep -q "Host semaphore-jump" "$CONFIG_FILE" 2>/dev/null; then
 
 Host semaphore-jump
   HostName 209.38.146.146
+  Port 443
   User root
   IdentityFile $KEY_FILE
   StrictHostKeyChecking no

@@ -49,22 +49,24 @@
     - name: Configure sslh when web server uses 443
       when: web_on_443
       block:
-        - name: Move nginx to 8443 if nginx on 443
+        - name: Find nginx configs listening on 443
           ansible.builtin.shell: |
-            set -o pipefail
-            if ss -tlnp | grep -q nginx.*443; then
-              if [[ -f /etc/nginx/sites-enabled/default ]]; then
-                sed -i 's/listen 443 ssl/listen 8443 ssl/g' /etc/nginx/sites-enabled/default 2>/dev/null || true
-                sed -i 's/listen \[::\]:443 ssl/listen [::]:8443 ssl/g' /etc/nginx/sites-enabled/default 2>/dev/null || true
-              fi
-              systemctl reload nginx 2>/dev/null || true
-            fi
-          args:
-            executable: /bin/bash
+            grep -rl 'listen.*443' /etc/nginx/ 2>/dev/null || true
+          register: nginx443_files
           changed_when: false
-          failed_when: false
 
-        - name: Write sslh systemd override
+        - name: Move all nginx 443 listeners to 8443
+          ansible.builtin.replace:
+            path: "{{ item }}"
+            regexp: 'listen (\[::\]:)?443'
+            replace: 'listen \18443'
+          loop: "{{ nginx443_files.stdout_lines | default([]) | select('match', '.+') | list }}"
+          notify: Reload nginx
+
+        - name: Flush handlers to free port 443
+          ansible.builtin.meta: flush_handlers
+
+        - name: Write sslh config
           ansible.builtin.copy:
             dest: /etc/default/sslh
             mode: "0644"
@@ -78,7 +80,20 @@
             name: sslh
             enabled: true
             state: started
+          register: sslh_start
           failed_when: false
+
+        - name: Show sslh status if start failed
+          ansible.builtin.command:
+            argv: [journalctl, -u, sslh, --no-pager, -n, "20"]
+          register: sslh_journal
+          changed_when: false
+          when: sslh_start is failed or (sslh_start.status is defined and sslh_start.status.ActiveState != 'active')
+
+        - name: Debug sslh journal
+          ansible.builtin.debug:
+            var: sslh_journal.stdout_lines
+          when: sslh_journal is defined
 
     - name: Validate sshd config
       ansible.builtin.command:
@@ -120,6 +135,11 @@
           - "web_on_443={{ web_on_443 }} (sslh used if true)"
 
   handlers:
+    - name: Reload nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: reloaded
+
     - name: Restart sslh
       ansible.builtin.systemd:
         name: sslh
