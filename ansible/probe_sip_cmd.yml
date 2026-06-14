@@ -1,0 +1,58 @@
+---
+- name: Probe SIP stack (single host via --limit)
+  hosts: all
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Check FreeSWITCH
+      ansible.builtin.command: systemctl is-active freeswitch
+      register: fs
+      failed_when: false
+      changed_when: false
+
+    - name: Check Kamailio
+      ansible.builtin.command: systemctl is-active kamailio
+      register: kam
+      failed_when: false
+      changed_when: false
+
+    - name: Check OpenSIPS
+      ansible.builtin.command: systemctl is-active opensips
+      register: oip
+      failed_when: false
+      changed_when: false
+
+    - name: Check Asterisk
+      ansible.builtin.command: systemctl is-active asterisk
+      register: ast
+      failed_when: false
+      changed_when: false
+
+    - name: SIP listening ports
+      ansible.builtin.shell: ss -tlnup | grep -E ':506[0-9]|:508[0-9]|:8021' || true
+      register: ports
+      changed_when: false
+      failed_when: false
+
+    - name: fs_cli path
+      ansible.builtin.command: which fs_cli
+      register: fscli
+      failed_when: false
+      changed_when: false
+
+    - name: FreeSWITCH config dir
+      ansible.builtin.stat:
+        path: /etc/freeswitch
+      register: fscfg
+
+    - name: Report
+      ansible.builtin.debug:
+        msg:
+          - "hostname={{ inventory_hostname }}"
+          - "freeswitch={{ fs.stdout }}"
+          - "kamailio={{ kam.stdout }}"
+          - "opensips={{ oip.stdout }}"
+          - "asterisk={{ ast.stdout }}"
+          - "fs_cli={{ fscli.stdout | default('missing') }}"
+          - "has_freeswitch_cfg={{ fscfg.stat.exists | default(false) }}"
+          - "sip_ports={{ ports.stdout_lines }}"
