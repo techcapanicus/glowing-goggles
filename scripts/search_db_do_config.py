@@ -36,12 +36,10 @@ def get_creds_from_proc():
 
 
 def parse_mysql_dsn(dsn):
-    user, rest = dsn.split(":", 1)
-    password, tail = rest.split("@", 1)
-    inner = tail.split("@tcp(", 1)[1].rstrip(")")
-    hostport, database = inner.split("/", 1)
-    host, port = hostport.rsplit(":", 1)
-    return user, password, host, int(port), database
+    m = re.match(r"^([^:]+):([^@]+)@tcp\(([^:]+):(\d+)\)/(.+)$", dsn)
+    if not m:
+        raise ValueError(f"unrecognized MYSQL_DSN format: {dsn[:80]}")
+    return m.group(1), m.group(2), m.group(3), int(m.group(4)), m.group(5)
 
 
 def search_mysql(dsn):
@@ -49,7 +47,11 @@ def search_mysql(dsn):
     if not dsn:
         print("SKIP: no MYSQL_DSN")
         return
-    user, password, host, port, database = parse_mysql_dsn(dsn)
+    try:
+        user, password, host, port, database = parse_mysql_dsn(dsn)
+    except ValueError as exc:
+        print(f"ERROR: {exc}")
+        return
     print(f"Connecting to {host}:{port}/{database} as {user}")
     env = {**__import__("os").environ, "MYSQL_PWD": password}
     try:
