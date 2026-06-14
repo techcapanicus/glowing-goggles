@@ -1,11 +1,8 @@
 ---
-# Idempotent SSH key provisioning playbook.
+# Provision SSH key access with post-install diagnostics and controller SSH self-test.
 #
-# Connects as the bootstrap user (configured on the inventory's SSH key),
-# escalates with sudo, and adds `new_public_key` to the target user's
-# authorized_keys with correct permissions. Uses only ansible.builtin modules
-# (no external collections). Kept in sync with the heredoc embedded in
-# ../provision_ssh.py.
+# Bootstrap SSH: Semaphore inventory ssh_key_id (e.g. deployment key 303).
+# Extra vars: target_user, new_public_key; optional new_private_key for self-test.
 - name: Provision SSH key access
   hosts: all
   gather_facts: false
@@ -13,9 +10,16 @@
   vars:
     target_user: "{{ target_user | mandatory }}"
     new_public_key: "{{ new_public_key | mandatory }}"
+    new_private_key: "{{ new_private_key | default('') }}"
+    ssh_connect_host: "{{ ansible_host | default(inventory_hostname) }}"
     ssh_dir: >-
       {{ '/root/.ssh' if target_user == 'root'
          else '/home/' + target_user + '/.ssh' }}
+    auth_keys_path: "{{ ssh_dir }}/authorized_keys"
+    controller_key_path: >-
+      /tmp/ansible_ssh_test_{{ inventory_hostname
+      | regex_replace('[^a-zA-Z0-9_.-]', '_') }}_key
+
   tasks:
     - name: Ensure the target user exists
       ansible.builtin.user:
@@ -23,7 +27,19 @@
         state: present
       when: target_user != 'root'
 
-    - name: Ensure the .ssh directory exists with correct permissions
+    - name: Read sshd AuthorizedKeysFile and related settings (early)
+      ansible.builtin.shell: |
+        set -o pipefail
+        grep -hE '^(AuthorizedKeysFile|PubkeyAuthentication|PermitRootLogin|StrictModes|AllowUsers|AllowGroups)\b' \
+          /etc/ssh/sshd_config /etc/ssh/sshd_config.d/*.conf 2>/dev/null \
+          | sort -u
+      args:
+        executable: /bin/bash
+      register: sshd_cfg_early
+      changed_when: false
+      failed_when: false
+
+    - name: Ensure the .ssh directory exists
       ansible.builtin.file:
         path: "{{ ssh_dir }}"
         state: directory
@@ -31,23 +47,263 @@
         group: "{{ target_user }}"
         mode: "0700"
 
-    - name: Ensure authorized_keys exists with correct permissions
-      ansible.builtin.file:
-        path: "{{ ssh_dir }}/authorized_keys"
-        state: touch
-        owner: "{{ target_user }}"
-        group: "{{ target_user }}"
-        mode: "0600"
-        modification_time: preserve
-        access_time: preserve
-
-    - name: Add the public key (idempotent, no duplicates)
-      ansible.builtin.lineinfile:
-        path: "{{ ssh_dir }}/authorized_keys"
-        line: "{{ new_public_key }}"
+    - name: Add SSH public key (authorized_key module)
+      ansible.posix.authorized_key:
+        user: "{{ target_user }}"
         state: present
-        create: false
-        insertafter: EOF
+        key: "{{ new_public_key | trim }}"
+        exclusive: false
+        manage_dir: true
+
+    - name: Stat .ssh directory after key install
+      ansible.builtin.stat:
+        path: "{{ ssh_dir }}"
+      register: ssh_dir_stat
+
+    - name: Stat authorized_keys after key install
+      ansible.builtin.stat:
+        path: "{{ auth_keys_path }}"
+      register: auth_keys_stat
+
+    - name: Fix .ssh directory permissions when not 0700
+      ansible.builtin.file:
+        path: "{{ ssh_dir }}"
+        state: directory
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: "0700"
+      when:
+        - ssh_dir_stat.stat is defined
+        - ssh_dir_stat.stat.mode | default('') != '0700'
+
+    - name: Fix authorized_keys permissions when not 0600
+      ansible.builtin.file:
+        path: "{{ auth_keys_path }}"
+        state: file
         owner: "{{ target_user }}"
         group: "{{ target_user }}"
         mode: "0600"
+      when:
+        - auth_keys_stat.stat is defined
+        - auth_keys_stat.stat.mode | default('') != '0600'
+
+    - name: Fix .ssh directory ownership when wrong
+      ansible.builtin.file:
+        path: "{{ ssh_dir }}"
+        state: directory
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: "0700"
+      when:
+        - ssh_dir_stat.stat is defined
+        - ssh_dir_stat.stat.pw_name | default('') != target_user
+
+    - name: Fix authorized_keys ownership when wrong
+      ansible.builtin.file:
+        path: "{{ auth_keys_path }}"
+        state: file
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: "0600"
+      when:
+        - auth_keys_stat.stat is defined
+        - auth_keys_stat.stat.pw_name | default('') != target_user
+
+    - name: Restore SELinux context on .ssh tree (best-effort)
+      ansible.builtin.command:
+        argv:
+          - restorecon
+          - -Rv
+          - "{{ ssh_dir }}"
+      register: restorecon_out
+      changed_when: restorecon_out.rc == 0 and restorecon_out.stdout != ''
+      failed_when: false
+
+    - name: Print restorecon output
+      ansible.builtin.debug:
+        var: restorecon_out.stdout_lines
+      when: restorecon_out.stdout_lines is defined
+
+    - name: Discover absolute alternate AuthorizedKeysFile paths
+      ansible.builtin.shell: |
+        set -o pipefail
+        default="{{ auth_keys_path }}"
+        grep -hE '^AuthorizedKeysFile' /etc/ssh/sshd_config /etc/ssh/sshd_config.d/*.conf 2>/dev/null \
+          | sed 's/^AuthorizedKeysFile[[:space:]]*//' \
+          | tr ' ' '\n' \
+          | while read -r p; do
+              case "$p" in
+                /*) echo "$p" ;;
+              esac
+            done \
+          | sort -u \
+          | grep -Fxv "$default" || true
+      args:
+        executable: /bin/bash
+      register: alternate_auth_paths
+      changed_when: false
+      failed_when: false
+
+    - name: Write key to absolute alternate AuthorizedKeysFile paths
+      ansible.builtin.lineinfile:
+        path: "{{ item }}"
+        line: "{{ new_public_key | trim }}"
+        create: true
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: "0600"
+        state: present
+      loop: "{{ alternate_auth_paths.stdout_lines | default([]) }}"
+      when: alternate_auth_paths.stdout_lines | default([]) | length > 0
+
+    - name: Warn when PermitRootLogin blocks root pubkey login
+      ansible.builtin.debug:
+        msg: >-
+          WARNING: PermitRootLogin appears to be 'no' in sshd_config.
+          Public-key login as root will fail until sshd is reconfigured.
+      when:
+        - target_user == 'root'
+        - sshd_cfg_early.stdout is defined
+        - "'PermitRootLogin no' in sshd_cfg_early.stdout"
+
+    # --- Diagnostics -------------------------------------------------------
+    - name: Re-stat .ssh directory for diagnostics
+      ansible.builtin.stat:
+        path: "{{ ssh_dir }}"
+      register: ssh_dir
+
+    - name: Re-stat authorized_keys for diagnostics
+      ansible.builtin.stat:
+        path: "{{ auth_keys_path }}"
+      register: auth_keys_file
+
+    - name: Print permission diagnostics
+      ansible.builtin.debug:
+        msg:
+          - ".ssh dir owner: {{ ssh_dir.stat.pw_name | default('missing') }}, mode: {{ ssh_dir.stat.mode | default('missing') }}"
+          - "authorized_keys owner: {{ auth_keys_file.stat.pw_name | default('missing') }}, mode: {{ auth_keys_file.stat.mode | default('missing') }}"
+
+    - name: Check SELinux or AppArmor context on authorized_keys
+      ansible.builtin.command:
+        argv:
+          - ls
+          - -laZ
+          - "{{ auth_keys_path }}"
+      register: selinux_check
+      changed_when: false
+      failed_when: false
+
+    - name: Print SELinux or AppArmor context
+      ansible.builtin.debug:
+        var: selinux_check.stdout
+
+    - name: Dump sshd_config relevant lines
+      ansible.builtin.shell: |
+        set -o pipefail
+        grep -hE '^(PubkeyAuthentication|AuthorizedKeysFile|PermitRootLogin|AllowUsers|AllowGroups|PasswordAuthentication|UsePAM|StrictModes)\b' \
+          /etc/ssh/sshd_config /etc/ssh/sshd_config.d/*.conf 2>/dev/null \
+          | sort -u
+      args:
+        executable: /bin/bash
+      register: sshd_cfg
+      changed_when: false
+      failed_when: false
+
+    - name: Print sshd_config
+      ansible.builtin.debug:
+        var: sshd_cfg.stdout_lines
+
+    - name: Check auth log for recent sshd events
+      ansible.builtin.command:
+        argv:
+          - journalctl
+          - -u
+          - ssh
+          - --no-pager
+          - -n
+          - "30"
+          - --output=short-iso
+      register: sshd_journal
+      changed_when: false
+      failed_when: false
+
+    - name: Check auth log via sshd unit when ssh unit missing
+      ansible.builtin.command:
+        argv:
+          - journalctl
+          - -u
+          - sshd
+          - --no-pager
+          - -n
+          - "30"
+          - --output=short-iso
+      register: sshd_journal_fallback
+      changed_when: false
+      failed_when: false
+      when: sshd_journal.rc != 0
+
+    - name: Print sshd journal
+      ansible.builtin.debug:
+        var: >-
+          {{ (sshd_journal.stdout_lines if sshd_journal.rc == 0
+              else sshd_journal_fallback.stdout_lines) | default([]) }}
+
+    # --- Controller SSH self-test ------------------------------------------
+    - name: Write new private key on controller for SSH self-test
+      ansible.builtin.copy:
+        content: "{{ new_private_key }}\n"
+        dest: "{{ controller_key_path }}"
+        mode: "0600"
+      delegate_to: localhost
+      become: false
+      no_log: true
+      when: new_private_key | length > 0
+
+    - name: Test SSH auth with new key from controller
+      ansible.builtin.command:
+        argv:
+          - ssh
+          - -vvv
+          - -i
+          - "{{ controller_key_path }}"
+          - -o
+          - StrictHostKeyChecking=no
+          - -o
+          - BatchMode=yes
+          - -o
+          - ConnectTimeout=10
+          - "{{ target_user }}@{{ ssh_connect_host }}"
+          - echo SSH_AUTH_OK
+      delegate_to: localhost
+      become: false
+      register: ssh_test
+      changed_when: false
+      failed_when: false
+      when: new_private_key | length > 0
+
+    - name: Print SSH test stdout
+      ansible.builtin.debug:
+        var: ssh_test.stdout_lines
+      when: new_private_key | length > 0
+
+    - name: Print SSH test stderr (auth debug)
+      ansible.builtin.debug:
+        var: ssh_test.stderr_lines
+      when: new_private_key | length > 0
+
+    - name: Report SSH self-test result
+      ansible.builtin.debug:
+        msg: >-
+          SSH self-test from controller: {{
+            'SUCCESS (SSH_AUTH_OK)' if (ssh_test.rc | default(1)) == 0
+            else 'FAILED rc=' ~ (ssh_test.rc | default('?'))
+          }}
+      when: new_private_key | length > 0
+
+    - name: Remove controller temp private key
+      ansible.builtin.file:
+        path: "{{ controller_key_path }}"
+        state: absent
+      delegate_to: localhost
+      become: false
+      when: new_private_key | length > 0
