@@ -42,7 +42,13 @@ def parse_mysql_dsn(dsn):
     return m.group(1), m.group(2), m.group(3), int(m.group(4)), m.group(5)
 
 
-def search_mysql(dsn):
+def mysql_cmd_base(host, port, user, database, env):
+    for ssl_flag in (["--ssl-mode=REQUIRED"], ["--ssl"], []):
+        cmd = ["mysql", *ssl_flag, "-h", host, "-P", str(port), "-u", user, database]
+        out = subprocess.run(cmd + ["-N", "-e", "SELECT 1"], capture_output=True, text=True, timeout=30, env=env)
+        if out.returncode == 0:
+            return cmd
+    return ["mysql", "--ssl", "-h", host, "-P", str(port), "-u", user, database]
     print("=== MYSQL ===")
     if not dsn:
         print("SKIP: no MYSQL_DSN")
@@ -54,10 +60,10 @@ def search_mysql(dsn):
         return
     print(f"Connecting to {host}:{port}/{database} as {user}")
     env = {**__import__("os").environ, "MYSQL_PWD": password}
+    base = mysql_cmd_base(host, port, user, database, env)
     try:
         out = subprocess.run(
-            ["mysql", "--ssl-mode=REQUIRED", "-h", host, "-P", str(port),
-             "-u", user, database, "-N", "-e", "SHOW TABLES"],
+            base + ["-N", "-e", "SHOW TABLES"],
             capture_output=True, text=True, timeout=60, env=env,
         )
     except FileNotFoundError:
@@ -75,8 +81,7 @@ def search_mysql(dsn):
     print("--- Column name hits ---")
     for t in tables:
         cols_out = subprocess.run(
-            ["mysql", "--ssl-mode=REQUIRED", "-h", host, "-P", str(port),
-             "-u", user, database, "-N", "-e", f"SHOW COLUMNS FROM `{t}`"],
+            base + ["-N", "-e", f"SHOW COLUMNS FROM `{t}`"],
             capture_output=True, text=True, timeout=30, env=env,
         )
         if cols_out.returncode != 0:
@@ -89,8 +94,7 @@ def search_mysql(dsn):
     data_hits = 0
     for t in tables:
         cols_out = subprocess.run(
-            ["mysql", "--ssl-mode=REQUIRED", "-h", host, "-P", str(port),
-             "-u", user, database, "-N", "-e", f"SHOW COLUMNS FROM `{t}`"],
+            base + ["-N", "-e", f"SHOW COLUMNS FROM `{t}`"],
             capture_output=True, text=True, timeout=30, env=env,
         )
         if cols_out.returncode != 0:
@@ -104,8 +108,7 @@ def search_mysql(dsn):
             q = (f"SELECT `{col}` FROM `{t}` WHERE `{col}` REGEXP "
                  f"'digitalocean|doctl|do_token|firewall|dop_v1' LIMIT 5")
             row_out = subprocess.run(
-                ["mysql", "--ssl-mode=REQUIRED", "-h", host, "-P", str(port),
-                 "-u", user, database, "-N", "-e", q],
+                base + ["-N", "-e", q],
                 capture_output=True, text=True, timeout=60, env=env,
             )
             for row in row_out.stdout.splitlines():
@@ -124,8 +127,10 @@ def search_mongo(uri):
     try:
         import pymongo
     except ImportError:
-        print("ERROR: pymongo not installed")
-        return
+        print("Installing pymongo...")
+        subprocess.run([sys.executable, "-m", "pip", "install", "-q", "pymongo"],
+                       check=False, timeout=120)
+        import pymongo
     try:
         client = pymongo.MongoClient(uri, serverSelectionTimeoutMS=20000)
         client.admin.command("ping")
