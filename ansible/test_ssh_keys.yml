@@ -7,85 +7,15 @@
     ssh_user: "{{ target_user | default('root') }}"
 
   tasks:
-    - name: Test private keys on droplet against local sshd
-      ansible.builtin.shell: |
-        #!/bin/bash
-        set -uo pipefail
-        TARGET="{{ ssh_target }}"
-        USER="{{ ssh_user }}"
-
-        test_key() {
-          local key="$1"
-          local label="$2"
-          local host="$3"
-          local fp
-          fp=$(ssh-keygen -lf "$key" 2>/dev/null | awk '{print $2}' || echo "unknown")
-          local pub
-          pub=$(ssh-keygen -y -f "$key" 2>/dev/null | awk '{print $1, $2}' || echo "")
-          echo ""
-          echo "=== TEST: $label ==="
-          echo "  file: $key"
-          echo "  fingerprint: $fp"
-          echo "  pubkey: ${pub:0:60}..."
-
-          if out=$(ssh -o BatchMode=yes \
-                       -o StrictHostKeyChecking=no \
-                       -o ConnectTimeout=8 \
-                       -o IdentitiesOnly=yes \
-                       -i "$key" \
-                       "${USER}@${host}" \
-                       "echo SSH_OK; hostname" 2>&1); then
-            echo "  RESULT: SUCCESS"
-            echo "  output: $out"
-          else
-            echo "  RESULT: FAILED"
-            echo "  error: $(echo "$out" | tail -3 | tr '\n' ' ')"
-          fi
-        }
-
-        echo "=============================================="
-        echo "DROPLET KEY TESTS — target sshd on $TARGET"
-        echo "=============================================="
-
-        mapfile -t KEYS < <(find /root/.ssh /home -type f \
-          \( -name 'id_*' -o -name '*_rsa' -o -name '*_ed25519' \
-          -o -name '*_ecdsa' -o -name '*_dsa' \) \
-          ! -name '*.pub' ! -name 'known_hosts' \
-          ! -name 'authorized_keys' ! -name 'config' 2>/dev/null | sort -u)
-
-        if [[ ${#KEYS[@]} -eq 0 ]]; then
-          echo "No private key files found on droplet"
-        else
-          for key in "${KEYS[@]}"; do
-            [[ -r "$key" ]] || continue
-            test_key "$key" "droplet:$(basename "$key")" "$TARGET"
-          done
-        fi
-
-        echo ""
-        echo "=== MATCH authorized_keys entries to on-disk private keys ==="
-        while IFS= read -r publine; do
-          [[ -z "$publine" || "$publine" =~ ^# ]] && continue
-          comment=$(echo "$publine" | awk '{print $NF}')
-          matched="no"
-          for key in "${KEYS[@]}"; do
-            derived=$(ssh-keygen -y -f "$key" 2>/dev/null || true)
-            if [[ -n "$derived" && "$derived" == "$(echo "$publine" | awk '{print $1, $2}')" ]]; then
-              matched="$key"
-              break
-            fi
-          done
-          echo "  authorized_keys [$comment]: private_key=${matched}"
-        done < /root/.ssh/authorized_keys 2>/dev/null
-
-        echo ""
-        echo "=== SSH AGENT identities (if any) ==="
-        for sock in "${SSH_AUTH_SOCK:-}" /run/user/0/openssh_agent; do
-          [[ -n "$sock" && -S "$sock" ]] || continue
-          SSH_AUTH_SOCK="$sock" ssh-add -l 2>/dev/null || echo "  agent $sock: empty"
-        done
-      args:
-        executable: /bin/bash
+    - name: Test private keys on droplet
+      ansible.builtin.command:
+        argv:
+          - /bin/bash
+          - "{{ playbook_dir }}/../scripts/test_ssh_keys.sh"
+      environment:
+        TARGET_HOST: "{{ ssh_target }}"
+        TARGET_USER: "{{ ssh_user }}"
+        LABEL: droplet
       register: droplet_tests
       changed_when: false
       failed_when: false
@@ -94,7 +24,7 @@
       ansible.builtin.debug:
         var: droplet_tests.stdout_lines
 
-- name: Test private keys on Semaphore controller against droplet
+- name: Test private keys on Semaphore controller
   hosts: localhost
   connection: local
   gather_facts: false
@@ -103,85 +33,21 @@
     ssh_user: "{{ target_user | default('root') }}"
 
   tasks:
-    - name: Resolve Semaphore connection key path
+    - name: Resolve Semaphore inventory connection key
       ansible.builtin.set_fact:
         connection_key: >-
           {{ hostvars[groups['all'][0]]['ansible_ssh_private_key_file'] | default('') }}
 
-    - name: Test controller private keys against droplet
-      ansible.builtin.shell: |
-        #!/bin/bash
-        set -uo pipefail
-        TARGET="{{ ssh_target }}"
-        USER="{{ ssh_user }}"
-        ANSIBLE_KEY="{{ connection_key | default('') }}"
-
-        test_key() {
-          local key="$1"
-          local label="$2"
-          local fp
-          fp=$(ssh-keygen -lf "$key" 2>/dev/null | awk '{print $2}' || echo "unknown")
-          echo ""
-          echo "=== TEST: $label ==="
-          echo "  file: $key"
-          echo "  fingerprint: $fp"
-          if out=$(ssh -o BatchMode=yes \
-                       -o StrictHostKeyChecking=no \
-                       -o ConnectTimeout=8 \
-                       -o IdentitiesOnly=yes \
-                       -i "$key" \
-                       "${USER}@${TARGET}" \
-                       "echo SSH_OK; hostname" 2>&1); then
-            echo "  RESULT: SUCCESS"
-            echo "  output: $out"
-          else
-            echo "  RESULT: FAILED"
-            echo "  error: $(echo "$out" | tail -3 | tr '\n' ' ')"
-          fi
-        }
-
-        echo "=============================================="
-        echo "CONTROLLER KEY TESTS — $TARGET from $(hostname)"
-        echo "=============================================="
-
-        declare -A SEEN
-        add_key() {
-          local k="$1"
-          [[ -f "$k" && -r "$k" ]] || return
-          [[ -n "${SEEN[$k]:-}" ]] && return
-          SEEN[$k]=1
-          KEYS+=("$k")
-        }
-
-        KEYS=()
-        [[ -n "$ANSIBLE_KEY" ]] && add_key "$ANSIBLE_KEY"
-        for k in /root/.ssh/id_* /root/.ssh/*_ed25519 /root/.ssh/*_rsa; do
-          [[ "$k" == *.pub ]] && continue
-          add_key "$k"
-        done
-        while IFS= read -r k; do
-          add_key "$k"
-        done < <(find /tmp/semaphore /root/.ssh /home -type f \
-          \( -name 'id_*' -o -name '*_ed25519' -o -name '*_rsa' \) \
-          ! -name '*.pub' 2>/dev/null)
-
-        if [[ ${#KEYS[@]} -eq 0 ]]; then
-          echo "No private keys found on controller"
-        else
-          for key in "${KEYS[@]}"; do
-            test_key "$key" "controller:$(basename "$key")"
-          done
-        fi
-
-        echo ""
-        echo "=== SSH AGENT on controller ==="
-        if [[ -n "${SSH_AUTH_SOCK:-}" && -S "$SSH_AUTH_SOCK" ]]; then
-          ssh-add -l 2>/dev/null || echo "  agent empty"
-        else
-          echo "  no SSH_AUTH_SOCK"
-        fi
-      args:
-        executable: /bin/bash
+    - name: Test private keys on controller
+      ansible.builtin.command:
+        argv:
+          - /bin/bash
+          - "{{ playbook_dir }}/../scripts/test_ssh_keys.sh"
+      environment:
+        TARGET_HOST: "{{ ssh_target }}"
+        TARGET_USER: "{{ ssh_user }}"
+        LABEL: controller
+        EXTRA_KEY: "{{ connection_key | default('') }}"
       register: controller_tests
       changed_when: false
       failed_when: false
