@@ -1,0 +1,47 @@
+---
+- name: Recover nginx on Semaphore controller after failed sslh migration
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Stop sslh
+      ansible.builtin.systemd:
+        name: sslh
+        state: stopped
+        enabled: false
+      failed_when: false
+
+    - name: Find nginx configs with 8443
+      ansible.builtin.shell: grep -rl 'listen.*8443' /etc/nginx/ 2>/dev/null || true
+      register: nginx8443_files
+      changed_when: false
+
+    - name: Restore nginx 8443 listeners back to 443
+      ansible.builtin.shell: |
+        sed -i \
+          -e 's/listen 8443/listen 443/g' \
+          -e 's/listen \[::\]:8443/listen [::]:443/g' \
+          "{{ item }}"
+      loop: "{{ nginx8443_files.stdout_lines | default([]) | select('match', '.+') | list }}"
+
+    - name: Test nginx configuration
+      ansible.builtin.command:
+        argv: [nginx, -t]
+      register: nginx_test
+      failed_when: false
+
+    - name: Reload nginx
+      ansible.builtin.systemd:
+        name: nginx
+        state: reloaded
+      when: nginx_test.rc == 0
+
+    - name: Show listener state
+      ansible.builtin.shell: ss -tlnp | grep -E ':443|:8443|:80 ' || true
+      register: listeners
+      changed_when: false
+
+    - name: Recovery status
+      ansible.builtin.debug:
+        msg: "{{ listeners.stdout_lines }}"

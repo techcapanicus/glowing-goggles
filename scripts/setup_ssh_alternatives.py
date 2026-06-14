@@ -15,6 +15,7 @@ PLAYBOOKS = {
     "443": ("ansible/setup_ssh_on_443.yml", "Setup SSH on Port 443", 15),
     "tunnel": ("ansible/reverse_tunnel.yml", "Reverse SSH Tunnel", 21),
     "socat": ("ansible/setup_nc_relay.yml", "Setup Socat Relay", 15),
+    "recover": ("ansible/recover_nginx_semaphore.yml", "Recover Nginx Semaphore", 15),
 }
 ENV_ID = 172
 REPO_ID = 6
