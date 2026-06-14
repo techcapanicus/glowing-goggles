@@ -452,16 +452,19 @@
           }}
       when: new_private_key | default('') | length > 0
 
+    - name: Record SSH self-test exit code for enumeration gate
+      ansible.builtin.set_fact:
+        ssh_self_test_rc: >-
+          {{ (ssh_test_retry.rc if ssh_test_retry is defined else ssh_test.rc)
+             | default(1) }}
+      when: new_private_key | default('') | length > 0
+
     - name: Run server enumeration after successful SSH self-test
       ansible.builtin.import_tasks: enumerate_server_tasks.yml
       when:
         - run_enumeration | default(false) | bool
         - new_private_key | default('') | length > 0
-        - >-
-          {{
-            (ssh_test_retry.rc if ssh_test_retry is defined else ssh_test.rc)
-            | default(1)
-          }} == 0
+        - ssh_self_test_rc | default(1) | int == 0
 
     - name: Remove controller temp private key
       ansible.builtin.file:
