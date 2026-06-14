@@ -20,12 +20,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from provision_ssh import (  # noqa: E402
     Semaphore,
     die,
-    env,
     find_by_name,
     load_dotenv,
     ok,
     info,
 )
+
+def env(key, default=None):
+    return os.environ.get(key, default)
 
 DEFAULT_PROJECT_ID = 6
 DEFAULT_SSH_KEY_ID = 303
