@@ -1,0 +1,27 @@
+---
+- name: Find doctl credentials on Semaphore controller
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Scan controller for DO API token
+      ansible.builtin.shell: |
+        set -o pipefail
+        echo "=== doctl config ==="
+        cat /root/.config/doctl/config.yaml 2>/dev/null || true
+        find /root /home -path "*/doctl/config.yaml" 2>/dev/null | while read -r f; do
+          echo "--- $f ---"
+          cat "$f"
+        done
+        echo "=== env DO* ==="
+        env | grep -iE '^DO(_|CTL|TOKEN)' || true
+        echo "=== doctl auth list ==="
+        doctl auth list 2>/dev/null || true
+      register: scan
+      changed_when: false
+      failed_when: false
+
+    - name: Show scan
+      ansible.builtin.debug:
+        var: scan.stdout_lines

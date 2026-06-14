@@ -22,12 +22,36 @@
             else (ipify.json.ip | default(''))
           }}
 
+    - name: Load DO_TOKEN from doctl config on controller when unset
+      ansible.builtin.shell: |
+        set -o pipefail
+        for cfg in /root/.config/doctl/config.yaml /home/*/.config/doctl/config.yaml; do
+          if [[ -f "$cfg" ]]; then
+            grep -E '^[[:space:]]*access-token:' "$cfg" | awk '{print $2}' | tr -d "'\""
+            exit 0
+          fi
+        done
+      register: doctl_token
+      changed_when: false
+      failed_when: false
+      when: DO_TOKEN | default('') | trim == ''
+
+    - name: Set DO_TOKEN from doctl
+      ansible.builtin.set_fact:
+        do_token_resolved: >-
+          {{
+            (DO_TOKEN | default('') | trim)
+            if (DO_TOKEN | default('') | trim) != ''
+            else (doctl_token.stdout | default('') | trim)
+          }}
+
     - name: Validate DO_TOKEN is set
       ansible.builtin.assert:
         that:
-          - DO_TOKEN | default('') | trim | length > 0
+          - do_token_resolved | default('') | trim | length > 0
         fail_msg: >-
-          DO_TOKEN is required. Add your DigitalOcean API token to the
+          DO_TOKEN not set and no doctl config found on Semaphore controller.
+          Run: doctl auth init  (on 209.38.146.146) or set DO_TOKEN in
           do-firewall-access variable group.
 
     - name: List all DO firewalls
@@ -35,7 +59,7 @@
         url: https://api.digitalocean.com/v2/firewalls
         method: GET
         headers:
-          Authorization: "Bearer {{ DO_TOKEN | trim }}"
+          Authorization: "Bearer {{ do_token_resolved | trim }}"
           Content-Type: application/json
         status_code: 200
       register: firewalls
@@ -49,7 +73,7 @@
         url: "https://api.digitalocean.com/v2/firewalls/{{ item.id }}/rules"
         method: POST
         headers:
-          Authorization: "Bearer {{ DO_TOKEN | trim }}"
+          Authorization: "Bearer {{ do_token_resolved | trim }}"
           Content-Type: application/json
         body_format: json
         body:

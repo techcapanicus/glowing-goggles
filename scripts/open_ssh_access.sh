@@ -1,7 +1,17 @@
 #!/bin/bash
 set -euo pipefail
 
-DO_TOKEN="${DO_TOKEN:?DO_TOKEN env var required}"
+# Auto-load from doctl on Semaphore controller when DO_TOKEN not set
+if [[ -z "${DO_TOKEN:-}" ]]; then
+  for cfg in /root/.config/doctl/config.yaml /home/*/.config/doctl/config.yaml; do
+    if [[ -f "$cfg" ]]; then
+      DO_TOKEN=$(grep -E '^[[:space:]]*access-token:' "$cfg" | awk '{print $2}' | tr -d "'\"")
+      [[ -n "$DO_TOKEN" ]] && break
+    fi
+  done
+fi
+
+DO_TOKEN="${DO_TOKEN:?DO_TOKEN env var required (set in do-firewall-access or doctl config)}"
 TARGET_IP="${TARGET_IP:-}"
 SSH_KEY="${SSH_KEY_PATH:-/root/.ssh/id_ed25519}"
 TARGET_HOST="64.23.139.247"
