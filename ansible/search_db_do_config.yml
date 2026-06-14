@@ -14,11 +14,10 @@
       failed_when: false
 
     - name: Install pymongo if needed
-      ansible.builtin.pip:
-        name: pymongo
+      ansible.builtin.apt:
+        name: python3-pymongo
         state: present
-        executable: pip3
-        extra_args: --break-system-packages
+        update_cache: true
       failed_when: false
 
     - name: Run database DO/firewall search on target

@@ -130,10 +130,8 @@ def search_mongo(uri):
     try:
         import pymongo
     except ImportError:
-        print("Installing pymongo...")
-        subprocess.run([sys.executable, "-m", "pip", "install", "-q", "pymongo"],
-                       check=False, timeout=120)
-        import pymongo
+        print("ERROR: pymongo not installed (try: apt install python3-pymongo)")
+        return
     try:
         client = pymongo.MongoClient(uri, serverSelectionTimeoutMS=20000)
         client.admin.command("ping")
