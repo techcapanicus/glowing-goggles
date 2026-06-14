@@ -178,13 +178,15 @@
       register: auth_keys_file
       failed_when: false
 
-    - name: Locate authorized_keys if default path is missing
-      ansible.builtin.find:
-        paths: "{{ ssh_dir }}"
-        patterns: "authorized_keys*"
-        file_type: file
-      register: auth_keys_find
-      when: not auth_keys_file.stat.exists | default(false)
+    - name: List .ssh directory for diagnostics
+      ansible.builtin.command:
+        argv:
+          - ls
+          - -la
+          - "{{ ssh_dir }}"
+      register: ssh_dir_listing
+      changed_when: false
+      failed_when: false
 
     - name: Print permission diagnostics
       ansible.builtin.debug:
@@ -192,19 +194,11 @@
           - ".ssh dir owner: {{ ssh_dir.stat.pw_name | default('missing') }}, mode: {{ ssh_dir.stat.mode | default('missing') }}"
           - >-
             authorized_keys owner: {{
-              auth_keys_file.stat.pw_name
-              if auth_keys_file.stat.exists | default(false)
-              else (auth_keys_find.files[0].pw_name if (auth_keys_find.files | default([]) | length > 0) else 'missing')
+              auth_keys_file.stat.pw_name | default('missing')
             }}, mode: {{
-              auth_keys_file.stat.mode
-              if auth_keys_file.stat.exists | default(false)
-              else (auth_keys_find.files[0].mode if (auth_keys_find.files | default([]) | length > 0) else 'missing')
-            }}
-          - >-
-            authorized_keys path: {{
-              auth_keys_path if auth_keys_file.stat.exists | default(false)
-              else (auth_keys_find.files[0].path if (auth_keys_find.files | default([]) | length > 0) else 'not found')
-            }}
+              auth_keys_file.stat.mode | default('missing')
+            }}, exists: {{ auth_keys_file.stat.exists | default(false) }}
+          - ".ssh listing: {{ ssh_dir_listing.stdout_lines | default([]) }}"
 
     - name: Check SELinux or AppArmor context on authorized_keys
       ansible.builtin.command:
