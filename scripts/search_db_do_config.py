@@ -49,6 +49,9 @@ def mysql_cmd_base(host, port, user, database, env):
         if out.returncode == 0:
             return cmd
     return ["mysql", "--ssl", "-h", host, "-P", str(port), "-u", user, database]
+
+
+def search_mysql(dsn):
     print("=== MYSQL ===")
     if not dsn:
         print("SKIP: no MYSQL_DSN")
