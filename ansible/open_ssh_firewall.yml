@@ -1,0 +1,97 @@
+---
+- name: Whitelist IP on DigitalOcean firewall and verify SSH
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Detect caller public IP if TARGET_IP not provided
+      ansible.builtin.uri:
+        url: https://api.ipify.org?format=json
+        return_content: true
+        timeout: 15
+      register: ipify
+      when: TARGET_IP | default('') | trim == ''
+
+    - name: Set resolved IP fact
+      ansible.builtin.set_fact:
+        resolved_ip: >-
+          {{
+            (TARGET_IP | default('') | trim)
+            if (TARGET_IP | default('') | trim) != ''
+            else (ipify.json.ip | default(''))
+          }}
+
+    - name: Validate DO_TOKEN is set
+      ansible.builtin.assert:
+        that:
+          - DO_TOKEN | default('') | trim | length > 0
+        fail_msg: >-
+          DO_TOKEN is required. Add your DigitalOcean API token to the
+          do-firewall-access variable group.
+
+    - name: List all DO firewalls
+      ansible.builtin.uri:
+        url: https://api.digitalocean.com/v2/firewalls
+        method: GET
+        headers:
+          Authorization: "Bearer {{ DO_TOKEN | trim }}"
+          Content-Type: application/json
+        status_code: 200
+      register: firewalls
+
+    - name: Print firewall list
+      ansible.builtin.debug:
+        msg: "{{ firewalls.json.firewalls | map(attribute='name') | list }}"
+
+    - name: Add SSH inbound rule for resolved IP
+      ansible.builtin.uri:
+        url: "https://api.digitalocean.com/v2/firewalls/{{ item.id }}/rules"
+        method: POST
+        headers:
+          Authorization: "Bearer {{ DO_TOKEN | trim }}"
+          Content-Type: application/json
+        body_format: json
+        body:
+          inbound_rules:
+            - protocol: tcp
+              ports: "22"
+              sources:
+                addresses:
+                  - "{{ resolved_ip }}/32"
+        status_code: [204, 422]
+      loop: "{{ firewalls.json.firewalls }}"
+      register: fw_result
+
+    - name: Wait for firewall propagation
+      ansible.builtin.pause:
+        seconds: 8
+
+    - name: Test SSH after firewall update
+      ansible.builtin.command:
+        argv:
+          - ssh
+          - -o
+          - StrictHostKeyChecking=no
+          - -o
+          - ConnectTimeout=10
+          - -o
+          - BatchMode=yes
+          - -i
+          - >-
+            {{
+              SSH_KEY_PATH
+              | default(ansible_ssh_private_key_file | default('/root/.ssh/id_ed25519'))
+            }}
+          - root@64.23.139.247
+          - echo SSH_OK
+      register: ssh_test
+      changed_when: false
+      failed_when: false
+
+    - name: Report result
+      ansible.builtin.debug:
+        msg: >-
+          IP {{ resolved_ip }} added to all firewalls.
+          SSH test: {{ ssh_test.stdout | default('FAILED') }}.
+          Error: {{ ssh_test.stderr_lines[-3:] | default([]) | join(' ') }}
