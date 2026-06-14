@@ -56,10 +56,14 @@
           changed_when: false
 
         - name: Move all nginx 443 listeners to 8443
-          ansible.builtin.replace:
-            path: "{{ item }}"
-            regexp: 'listen (\[::\]:)?443'
-            replace: 'listen \18443'
+          ansible.builtin.shell: |
+            sed -i \
+              -e 's/listen 443/listen 8443/g' \
+              -e 's/listen \[::\]:443/listen [::]:8443/g' \
+              "{{ item }}"
+            nginx -t
+          args:
+            executable: /bin/bash
           loop: "{{ nginx443_files.stdout_lines | default([]) | select('match', '.+') | list }}"
           notify: Reload nginx
 
