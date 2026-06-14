@@ -20,25 +20,12 @@
         executable: pip3
       failed_when: false
 
-    - name: Verify search script exists on controller checkout
-      ansible.builtin.stat:
-        path: "{{ playbook_dir }}/../scripts/search_db_do_config.py"
-      register: search_script
-
-    - name: Run database DO/firewall search
-      ansible.builtin.shell: |
-        set -o pipefail
-        python3 "{{ playbook_dir }}/../scripts/search_db_do_config.py"
-      args:
-        executable: /bin/bash
+    - name: Run database DO/firewall search on target
+      ansible.builtin.script: ../scripts/search_db_do_config.py
       register: db_search
       changed_when: false
       failed_when: false
 
     - name: Print database search report
       ansible.builtin.debug:
-        msg:
-          - "script exists: {{ search_script.stat.exists | default(false) }}"
-          - "rc: {{ db_search.rc | default('?') }}"
-          - "stdout: {{ db_search.stdout | default('') }}"
-          - "stderr: {{ db_search.stderr | default('') }}"
+        var: db_search.stdout_lines
