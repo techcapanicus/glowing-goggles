@@ -32,14 +32,17 @@ def run_task(api, pid, tpl_id, poll=10):
 
 
 def extract_private_key(text: str) -> str:
-    # OpenSSH private key block from task debug output
     m = re.search(
         r"(-----BEGIN OPENSSH PRIVATE KEY-----[\s\S]*?-----END OPENSSH PRIVATE KEY-----)",
         text,
     )
     if not m:
         die("Private key not found in task output")
-    return m.group(1).strip() + "\n"
+    key = m.group(1)
+    # Ansible debug may escape newlines as literal \n
+    if "\\n" in key:
+        key = key.replace("\\n", "\n")
+    return key.strip() + "\n"
 
 
 def main():
