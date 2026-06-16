@@ -1,0 +1,10 @@
+---
+- name: Update SSH keys for access
+  hosts: all
+  become: yes
+  tasks:
+    - name: Add Antigravity SSH public key to authorized_keys
+      ansible.posix.authorized_key:
+        user: "{{ ansible_user }}"
+        state: present
+        key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDI9c+BUTCf2B0PYobexiSvMBhNsxKttABAF8KWR2NLr3ZbGfJugifbPSamsmWGq6s7QOGVzqGDT6g12TLowp7KI0EPNvh97nmXKjbGzS6+91IYvNBmVWGWSoxXfzHCh6xOIukZyVZ9CfAArL/e12zVo4MVxAF/ZWuOcynNdb8b0B5K7reL5H38Hbj5XRi3xVws4sUi0e3rxJHYnPdDMmn4ECzg2ZHFollj3b2zXUS+TyQjcopQiYnxiIum6EJ0KsDwUWY2P6CIcunB4BsvJYZNXkb9Xyi7CpYzR2tjkxukuENmnvPCWLpRgmnTrEaTvNiRpks5Ummgl+WKC792/F56w2O9jc3vbk+Jb5Mt1JTPX/FsjtslMwxgtZBtSJjZkAE+jOfZsNUhZS4Cb3mSfZxGyL3t2m2evJxlwMGzyilgyvOanMmnJWPNRPm+iHl7xLtfqMypgAIqNBD6GMeODhO3yB6uSMmOdiQa/F1qeZkF/hPNWJXAy0L+dAM+P8nO97LbX/DTyEy3PXH6iyCJt6/Boox4V15RF6gviKi+WNdnMJjuwirF69qY7xKMH4z0KLoO85yD3F4IX67BQqwF/yOB55NpurxyuwqBbEyV3VHN4vCg/Gh0z+Za9CbvG33C35aqTHmPysSur+j1BMKFuryDAR1N3EHQmXwNr+UZN05awQ=="
