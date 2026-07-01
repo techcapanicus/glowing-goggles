@@ -81,13 +81,16 @@ wss.on('connection', (ws) => {
     conn = new Client();
 
     conn.on('ready', () => {
-      send(ws, 'status', `connected to ${SSH_USER}@${SSH_HOST}`);
       conn.shell({ term: 'xterm-256color', cols: 80, rows: 24 }, (err, str) => {
         if (err) {
           send(ws, 'error', err.message);
           return ws.close();
         }
+        // Only announce "connected" once the shell stream itself is ready
+        // to accept writes -- otherwise keystrokes typed in that gap would
+        // silently hit `stream === null` below and be dropped forever.
         stream = str;
+        send(ws, 'status', `connected to ${SSH_USER}@${SSH_HOST}`);
         stream.on('data', (chunk) => send(ws, 'data', chunk.toString('utf8')));
         stream.stderr.on('data', (chunk) => send(ws, 'data', chunk.toString('utf8')));
         stream.on('close', () => {
