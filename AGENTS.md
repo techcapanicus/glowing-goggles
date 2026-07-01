@@ -9,6 +9,11 @@ This repo holds two things that both talk to the My Country Mobile Semaphore UI
 - `provision_ssh.py`: a single-file, stdlib-only Semaphore REST API script
   (+ embedded/`ansible/provision_ssh.yml` playbook).
 
+It also holds `ssh-terminal/`: an unrelated, standalone Node app (its own
+`package.json`) that gives a browser-based `xterm.js` terminal bridged via
+WebSocket + `ssh2` to a single SSH target configured through `ssh-terminal/.env`
+(see `ssh-terminal/README.md`). It does not talk to Semaphore.
+
 ### Running / lint / build / test
 - Standard commands live in `package.json` scripts and `README.md`. In short:
   `npm run dev` (Vite dev server, port 5173, bound to `0.0.0.0`), `npm run lint`
