@@ -8,27 +8,34 @@
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <div id="app">
-    <header id="topbar">
-      <div id="topbar-left">
-        <span class="dot" id="status-dot"></span>
-        <span id="status-text">connecting&hellip;</span>
-      </div>
-      <div id="topbar-right">
-        <button id="reconnect-btn" title="Reconnect">&#x21bb; Reconnect</button>
-      </div>
-    </header>
+  <div id="desktop">
+    <div id="window">
+      <header id="titlebar">
+        <div id="traffic-lights">
+          <span class="light red"></span>
+          <span class="light yellow"></span>
+          <span class="light green"></span>
+        </div>
+        <div id="window-title">
+          <span class="dot" id="status-dot"></span>
+          <span id="status-text">connecting&hellip;</span>
+        </div>
+        <button id="reconnect-btn" title="Reconnect">&#x21bb;</button>
+      </header>
 
-    <div id="terminal"></div>
-
-    <div id="auth-overlay" class="hidden">
-      <form id="auth-form">
-        <label for="auth-password">App password</label>
-        <input id="auth-password" type="password" autocomplete="current-password" autofocus />
-        <button type="submit">Connect</button>
-        <p id="auth-error" class="error hidden"></p>
-      </form>
+      <div id="terminal"></div>
     </div>
+  </div>
+
+  <div id="auth-overlay" class="hidden">
+    <form id="auth-form">
+      <div id="auth-icon">&#128274;</div>
+      <h1>SSH Terminal</h1>
+      <label for="auth-password">App password</label>
+      <input id="auth-password" type="password" autocomplete="current-password" autofocus />
+      <button type="submit">Connect</button>
+      <p id="auth-error" class="error hidden"></p>
+    </form>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/lib/xterm.js"></script>

@@ -4,6 +4,7 @@ require('dotenv').config();
 
 const path = require('path');
 const http = require('http');
+const net = require('net');
 const express = require('express');
 const { WebSocketServer } = require('ws');
 const { Client } = require('ssh2');
@@ -34,6 +35,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/healthz', (_req, res) => res.json({ ok: true }));
 
 const server = http.createServer(app);
+// Disable Nagle's algorithm on every connection: with it on, small frames
+// (like single keystrokes) can sit buffered for tens of ms waiting to be
+// coalesced with more data, which is the opposite of what a terminal wants.
+server.on('connection', (socket) => socket.setNoDelay(true));
+
 const wss = new WebSocketServer({ server, path: '/ws', perMessageDeflate: false });
 
 function send(ws, type, data) {
@@ -99,9 +105,15 @@ wss.on('connection', (ws) => {
 
     conn.on('end', () => ws.close());
 
+    // Connect the TCP socket ourselves so we can disable Nagle's algorithm
+    // before handing it to ssh2 -- otherwise single-keystroke SSH packets
+    // can get buffered for tens of ms on this leg too.
+    const sock = net.connect({ host: SSH_HOST, port: SSH_PORT });
+    sock.setNoDelay(true);
+    sock.once('error', (err) => send(ws, 'error', `TCP error: ${err.message}`));
+
     conn.connect({
-      host: SSH_HOST,
-      port: SSH_PORT,
+      sock,
       username: SSH_USER,
       password: SSH_PASSWORD,
       readyTimeout: 20000,
