@@ -1,5 +1,3 @@
-const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-
 export class ExpertFlowError extends Error {
   constructor (message, status) {
     super(message)
@@ -33,7 +31,6 @@ async function request (url, options = {}) {
     ...options,
     headers: {
       Accept: 'application/json',
-      'User-Agent': UA,
       ...options.headers,
     },
   })

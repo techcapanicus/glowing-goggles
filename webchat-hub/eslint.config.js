@@ -3,6 +3,7 @@ import pluginVue from 'eslint-plugin-vue'
 import vueParser from 'vue-eslint-parser'
 
 export default [
+  { ignores: ['dist/**'] },
   js.configs.recommended,
   ...pluginVue.configs['flat/recommended'],
   {

@@ -24,12 +24,22 @@ export default defineConfig(({ mode }) => {
     ]),
   )
 
+  const base = env.VITE_BASE_PATH || '/'
+
   return {
+    base,
     plugins: [vue(), vuetify({ autoImport: true })],
     server: {
       host: '0.0.0.0',
       port: 5174,
       proxy,
+      allowedHosts: true,
+    },
+    preview: {
+      host: '0.0.0.0',
+      port: 5174,
+      proxy,
+      allowedHosts: true,
     },
   }
 })
