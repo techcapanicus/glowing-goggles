@@ -1,0 +1,82 @@
+Mobile Commons–Like Platform Research — Statistics
+=======================================================
+Total platforms: 100
+Self-serve signup (YES): 48
+US-focused (YES): 99
+US-focused (PARTIAL): 1
+
+Inclusion bar (same purposes as Mobile Commons):
+- Opt-in mobile supporter/advocate lists with broadcast SMS (A2P) and/or
+  integrated advocacy mobile CRM (not generic CPaaS-only)
+- Text-to-action: petitions, legislator email/call/SMS, GOTV, fundraising
+- Built for nonprofits, campaigns, unions, associations, advocacy orgs, or
+  churches/community orgs using the same list-building + blast model
+
+Explicitly excluded from this list:
+- Twilio, Plivo, Bandwidth (raw CPaaS without advocacy product surface)
+- Pure retail/e-commerce SMS (Attentive, Postscript, etc.)
+- Pure email-only CRMs without SMS/mobile engagement path
+
+Alternate vocabulary search groups (brainstorm → queries):
+  - mobile advocacy / advocacy SMS platform (~18 targeted searches)
+  - Mobile Commons alternatives / Upland Mobile Messaging competitors (~14 targeted searches)
+  - civic engagement mobile CRM / supporter activation platform (~12 targeted searches)
+  - grassroots advocacy software SMS / public affairs mobilization (~16 targeted searches)
+  - nonprofit mass texting / broadcast SMS nonprofit (~15 targeted searches)
+  - political campaign mobile messaging / GOTV SMS (~12 targeted searches)
+  - text-to-action / text-to-join / mobile keyword advocacy (~10 targeted searches)
+  - call your legislator SMS / patch-through mobile advocacy (~8 targeted searches)
+  - digital organizing suite broadcast texting (~11 targeted searches)
+  - union member SMS / labor mobilization texting (~6 targeted searches)
+  - 501(c)(3) and 501(c)(4) advocacy texting (~8 targeted searches)
+  - church/community SMS opt-in list (parallel use case) (~6 targeted searches)
+  - text-to-give / mobile fundraising SMS (~10 targeted searches)
+  - peer-to-peer texting advocacy (paired with broadcast like mcommons) (~9 targeted searches)
+  - association member mobilization SMS (~5 targeted searches)
+
+Top service tags (platform may appear in multiple):
+   10  P2P texting
+    9  Text-to-give
+    5  Keyword opt-in
+    5  Mass texting
+    5  Mass SMS
+    4  Supporter CRM
+    4  Advocacy mobilization
+    4  Text-to-donate
+    4  Bulk SMS
+    3  Advocacy CRM
+    3  Advocacy SMS
+    3  Mobile fundraising
+    3  Two-way SMS
+    2  Mobile advocacy CRM
+    2  Call-your-legislator
+    2  Mass SMS/MMS
+    2  Broadcast SMS
+    2  Short code
+    2  Legislative targeting
+    2  Advocate CRM
+    2  Patch-through calls
+    2  Multi-channel advocacy
+    2  Mobile keywords
+    2  GOTV tools
+    2  Patch-through calling
+
+Category breakdown (primary fit):
+  25  Core mobile advocacy CRM peers (direct mcommons category)
+  25  Digital organizing suites (broadcast + P2P + CRM overlap)
+  20  Nonprofit/fundraising mobile SMS
+   6  Church/community mobile engagement
+  24  General SMS with explicit advocacy/nonprofit positioning
+
+Legacy / merged names worth knowing:
+  - Phone2Action → Capitol Canary → Quorum Grassroots
+  - Strive Messaging → Ascend
+  - Outvote → Impactive → ActBlue Field Tools
+  - MobileCause → GiveSmart (Community Brands / Momentive)
+  - Revere Suite (legacy broadcast advocacy CRM; cited with Mobile Commons
+    in organizer literature; successor vendor landscape now Ascend/Rally/etc.)
+
+Output files:
+  - mcommons_like_platforms.csv
+  - mcommons_like_platforms.md
+  - mcommons_like_platforms_stats.txt
