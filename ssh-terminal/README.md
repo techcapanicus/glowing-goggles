@@ -38,6 +38,29 @@ the server's `.env`.
 
 `.env` is gitignored — never commit real credentials. See `.env.example`.
 
+## Exposing it publicly
+
+By default the server just binds `HOST:PORT` (e.g. `0.0.0.0:3001`), which is
+only reachable on your local network/machine. To get a public HTTPS URL
+without touching any firewall/router config, run a free Cloudflare "quick
+tunnel" alongside `npm start`:
+
+```bash
+npm run tunnel
+```
+
+This downloads a local `cloudflared` binary into `ssh-terminal/.bin/`
+(gitignored) and prints a random `https://<random-words>.trycloudflare.com`
+URL that proxies straight through to your local server. It's an
+outbound-only connection — no inbound ports need to be opened anywhere.
+
+Quick tunnels are meant for temporary/personal use: no uptime guarantee, and
+the URL changes every time you restart the tunnel. For anything long-lived,
+set up a [named Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/)
+(or another reverse proxy with a real TLS cert) instead, and keep
+`APP_PASSWORD` set — a quick tunnel makes this server (and therefore the SSH
+session it opens) reachable by anyone with the URL until you stop it.
+
 ## Notes
 
 - Each browser tab that connects opens its **own** SSH connection/shell to
