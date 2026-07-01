@@ -1,0 +1,207 @@
+#,Name,Website_URL,Login_URL,Service_Type,Self_Serve,US_Focused,Source_URL
+1,CallFire,https://www.callfire.com,https://www.callfire.com/login,Voice broadcast;Mass SMS;IVR,YES,YES,zipdo.co voice broadcast; g2.com compare
+2,DialMyCalls,https://www.dialmycalls.com,https://www.dialmycalls.com/login,Voice broadcast;Mass SMS,YES,YES,zipdo.co voice broadcast; capterra emergency notification
+3,CallHub,https://callhub.io,https://callhub.io/login,Voice broadcast;Political calling;Political SMS/P2P;Predictive dialer,YES,YES,callhub.io voice broadcasting; g2 political campaign
+4,Slybroadcast,https://www.slybroadcast.com,https://www.slybroadcast.com/login,Ringless voicemail;Voice broadcast,YES,YES,slybroadcast.com; voicedrop alternatives
+5,VoiceDrop,https://voicedrop.ai,https://app.voicedrop.ai,Ringless voicemail;Mass SMS,YES,YES,voicedrop.ai; callfire alternatives
+6,Drop Cowboy,https://dropcowboy.com,https://app.dropcowboy.com,Ringless voicemail;Mass SMS,YES,YES,dropcowboy.com; ringless voicemail search
+7,VoApps DirectDrop,https://www.voapps.com,https://www.voapps.com/login,Ringless voicemail,NO,YES,voapps.com ringless voicemail
+8,Voicent,https://www.voicent.com,https://www.voicent.com/login,Voice broadcast;Predictive dialer;IVR,YES,YES,zipdo.co; voicent political campaign
+9,VoiceShot,https://www.voiceshot.com,https://www.voiceshot.com/login,Voice broadcast;Mass SMS,YES,YES,zipdo.co; rankedsuite political robocalls
+10,Sigma Voice,https://sigmavoice.com,https://sigmavoice.com/login,Voice broadcast;IVR;Mass SMS,YES,YES,sigmavoice.com political; callfire alternative
+11,Call Loop,https://www.callloop.com,https://www.callloop.com/login,Voice broadcast;Ringless voicemail;Mass SMS,YES,YES,callloop.com; nerdisa voice broadcast
+12,Robotalker,https://robotalker.com,https://robotalker.com/login,Voice broadcast;Mass SMS,YES,YES,robotalker.com; voicedrop top providers
+13,Text-Em-All,https://www.text-em-all.com,https://www.text-em-all.com/login,Voice broadcast;Mass SMS,YES,YES,getapp.com text-em-all
+14,CallMultiplier,https://www.callmultiplier.com,https://www.callmultiplier.com/login,Voice broadcast;Mass SMS,YES,YES,callmultiplier.com churches; capterra
+15,One Call Now,https://onecallnow.crisis24.com,https://onecallnow.crisis24.com/login,Voice broadcast;Mass SMS,YES,YES,onecallnow.crisis24.com; capterra emergency
+16,CallingPost,https://www.callingpost.com,https://www.callingpost.com/login,Voice broadcast;Mass SMS,YES,YES,callingpost.com; sourceforge voice broadcast
+17,Stratics Networks,https://straticsnetworks.com,https://straticsnetworks.com/login,Ringless voicemail;Voice broadcast,YES,YES,sourceforge voice broadcast; dropcowboy alternatives
+18,LeadsRain,https://leadsrain.com,https://leadsrain.com/login,Ringless voicemail;Predictive dialer,YES,YES,leadsrain.com blog; b2bsalestools RVM
+19,Dialer360,https://dialer360.com,https://dialer360.com/login,Ringless voicemail;Predictive dialer,YES,YES,leadsrain blog; sourceforge
+20,InterCloud9,https://www.intercloud9.com,https://www.intercloud9.com/login,Ringless voicemail;Voice broadcast;Mass SMS;Predictive dialer,YES,YES,intercloud9.com political; sourceforge
+21,Callex Solutions,https://callexsolutions.com,https://callexsolutions.com/login,Voice broadcast;IVR,NO,YES,callexsolutions.com voice broadcast
+22,SimplyCast,https://www.simplycast.com,https://www.simplycast.com/login,Voice broadcast;Mass SMS,YES,YES,sourceforge voice broadcast
+23,CDYNE,https://www.cdyne.com,https://www.cdyne.com/login,Voice broadcast;Mass SMS,YES,YES,sourceforge voice broadcast
+24,AlertMedia,https://www.alertmedia.com,https://www.alertmedia.com/login,Voice broadcast;Mass SMS,NO,YES,capterra emergency notification
+25,Regroup Mass Notification,https://www.regroup.com,https://www.regroup.com/login,Voice broadcast;Mass SMS,NO,YES,capterra emergency notification
+26,RedFlag,https://www.redflag.com,https://www.redflag.com/login,Voice broadcast;Mass SMS,NO,YES,capterra emergency notification
+27,OnSolve Platform,https://www.onsolve.com,https://www.onsolve.com/login,Voice broadcast;Mass SMS,NO,YES,capterra emergency notification
+28,TrueDialog,https://www.truedialog.com,https://www.truedialog.com/login,Voice broadcast;Mass SMS,YES,YES,capterra emergency notification
+29,Voiply,https://voiply.com,https://voiply.com/login,Ringless voicemail,YES,YES,gitnux RVM software
+30,CallBlitzer,https://callblitzer.com,https://callblitzer.com/login,Voice broadcast,YES,YES,sourceforge voice broadcast
+31,VoiceBlaze,https://www.voiceblaze.com,https://www.voiceblaze.com/login,Voice broadcast,YES,YES,sourceforge voice broadcast
+32,Messagizer,https://messagizer.com,https://messagizer.com/login,Voice broadcast;Mass SMS,YES,YES,sourceforge voice broadcast
+33,My Call Cloud,https://www.mycallcloud.com,https://www.mycallcloud.com/login,Ringless voicemail;Predictive dialer,NO,YES,slybroadcast.com partner mention
+34,TCN,https://www.tcn.com,https://www.tcn.com/login,Voice broadcast;Predictive dialer,NO,YES,convoso alternatives search
+35,SlyDial,https://www.slydial.com,https://www.slydial.com/login,Ringless voicemail,YES,YES,b2bsalestools RVM category
+36,Babelforce,https://www.babelforce.com,https://www.babelforce.com/login,Voice broadcast;IVR,NO,YES,robotalker.com blog
+37,Mobile Text Alerts,https://mobile-text-alerts.com,https://mobile-text-alerts.com/login,Voice broadcast;Mass SMS,YES,YES,capterra emergency notification
+38,Kokomo24/7,https://www.kokomo247.com,https://www.kokomo247.com/login,Voice broadcast;Mass SMS,YES,YES,capterra emergency notification
+39,Vector LiveSafe,https://www.vectorsolutions.com/solutions/vector-livesafe,https://admin.livesafe.com,Mass SMS;Voice broadcast,NO,YES,capterra emergency notification
+40,SIGNL4,https://www.signl4.com,https://www.signl4.com/login,Mass SMS;Voice broadcast,YES,YES,capterra emergency notification
+41,DeskAlerts,https://www.deskalerts.com,https://www.deskalerts.com/login,Voice broadcast;Mass SMS,NO,YES,capterra emergency notification
+42,Crises Control,https://www.crises-control.com,https://www.crises-control.com/login,Voice broadcast;Mass SMS,NO,YES,capterra emergency notification
+43,Konexus,https://www.konexus.com,https://www.konexus.com/login,Voice broadcast;Mass SMS,NO,YES,capterra emergency notification
+44,DERDACK Enterprise Alert,https://www.derdack.com,https://www.derdack.com/login,Voice broadcast;Mass SMS,NO,YES,capterra emergency notification
+45,Emitrr,https://emitrr.com,https://app.emitrr.com,Voice broadcast;Mass SMS,YES,YES,capterra telephony shortlist
+46,RapBooster,https://rapbooster.com,https://rapbooster.com/login,Voice broadcast;Mass SMS,YES,YES,capterra telemarketing
+47,CallCenterHosting,https://www.callcenterhosting.com,https://www.callcenterhosting.com/login,Voice broadcast;Predictive dialer,NO,YES,sourceforge voice broadcast
+48,The Call Pro,https://www.thecallpro.com,https://www.thecallpro.com/login,Voice broadcast,YES,YES,sourceforge voice broadcast
+49,Zendly,https://zendly.com,https://zendly.com/login,Voice broadcast;Mass SMS,YES,YES,sourceforge voice broadcast
+50,PeakSend AI,https://peaksend.ai,https://app.peaksend.ai,Voice broadcast;Predictive dialer,YES,YES,g2.com voice broadcast marketplace
+51,OneBox,https://www.onebox.com,https://www.onebox.com/login,Ringless voicemail,UNKNOWN,YES,gitnux RVM software 2026
+52,Maverick Mailing,https://www.maverickmailing.com,https://www.maverickmailing.com/login,Ringless voicemail,NO,YES,gitnux RVM software 2026
+53,GetThru ThruTalk,https://www.getthru.io/p2p-thrutalk,https://app.getthru.io,Political calling;Predictive dialer,NO,YES,getthru.io thrutalk; getapp political
+54,RoboCent,https://www.robocent.com,https://app.robocent.com,Political calling;Voice broadcast;Political SMS/P2P,YES,YES,getapp robocent; fullpac gotv.com
+55,FullPAC,https://www.gotv.com,https://app.gotv.com,Political calling;Political SMS/P2P;Voice broadcast,NO,YES,gotv.com products
+56,Tele-Town Hall,https://teletownhall.com,https://teletownhall.com/login,Tele-townhall;Voice broadcast;Political calling,NO,YES,teletownhall.com
+57,TTHM (Telephone Town Hall Meeting),https://tthm.com,https://tthm.com/login,Tele-townhall;Voice broadcast,NO,YES,tthm.com teletownhalls
+58,NGP VAN OpenVPB,https://www.ngpvan.com,https://app.ngpvan.com,Political calling,NO,YES,ngpvan.com virtual phone banking; g2 political
+59,Impactive (ActBlue Field Tools),https://www.impactive.io,https://app.impactive.io,Political calling;Political SMS/P2P;Predictive dialer,NO,YES,impactive.io phone banking
+60,Numinar,https://www.numinar.com,https://app.numinar.com,Political calling;Political SMS/P2P;Predictive dialer,NO,YES,numinar.com features
+61,Solidarity Tech,https://www.solidarity.tech,https://app.solidarity.tech,Political calling;Political SMS/P2P;Predictive dialer,YES,YES,solidarity.tech nationbuilder alternative
+62,VICIdial,https://www.vicidial.com,https://www.vicidial.com/vicidial,Predictive dialer;Voice broadcast,YES,YES,capterra telemarketing; vicistack political
+63,ViciStack,https://vicistack.com,https://vicistack.com/login,Predictive dialer;Political calling,NO,YES,vicistack.com political campaigns
+64,Database Systems Corp (DSC),https://www.database-systems.com,https://www.database-systems.com/login,Voice broadcast;Political calling,NO,YES,rankedsuite political robocalls
+65,Townhall Interactive,https://www.townhallinteractive.com,https://www.townhallinteractive.com/login,Tele-townhall;Political calling,NO,YES,tele-townhall search
+66,Fireside,https://www.fireside21.com,https://www.fireside21.com/login,Tele-townhall;Political calling,NO,YES,tele-townhall search
+67,RelayVoice,https://www.relayvoice.com,https://app.relayvoice.com,Political calling;Voice broadcast,YES,YES,relayvoice alternatives search
+68,OutreachCircle,https://www.outreachcircle.com,https://app.outreachcircle.com,Political calling;Political SMS/P2P,YES,YES,g2.com political campaign category
+69,Organizer,https://www.organizer.com,https://app.organizer.com,Political calling,NO,YES,g2.com political campaign
+70,Aristotle Campaign Manager,https://www.aristotle.com/campaign-manager,https://www.aristotle.com/login,Political calling,NO,YES,g2.com political campaign
+71,CampaignSidekick,https://www.campaignsidekick.com,https://app.campaignsidekick.com,Political calling,YES,YES,getapp.com campaignsidekick
+72,Qomon,https://www.qomon.io,https://app.qomon.io,Political calling;Political SMS/P2P,YES,YES,getapp.com qomon
+73,Ecanvasser,https://www.ecanvasser.com,https://app.ecanvasser.com,Political calling,YES,YES,getapp.com ecanvasser
+74,Phone2Action Grassroots,https://www.phone2action.com,https://app.phone2action.com,Political calling;Political SMS/P2P,NO,YES,getapp.com phone2action
+75,Capitol Canary,https://www.capitolcanary.com,https://app.capitolcanary.com,Political calling;Advocacy,NO,YES,getapp phone2action (formerly)
+76,Bonterra EveryAction,https://www.everyaction.com,https://app.everyaction.com,Political calling;Mass SMS,NO,YES,g2.com political campaign
+77,Districtor,https://www.districtor.com,https://app.districtor.com,Political calling;Advocacy,YES,YES,g2.com onlinecandidate reviews
+78,GoodParty.org,https://goodparty.org,https://goodparty.org/login,Political calling;Political SMS/P2P,YES,YES,getapp.com good-party
+79,Partyline,https://www.partyline.io,https://app.partyline.io,Political calling;Advocacy,YES,YES,getapp.com partyline
+80,Trail Blazer Campaign Manager,https://www.trailblz.com,https://app.trailblz.com,Political calling;Mass SMS,NO,YES,getapp.com trail blazer
+81,ISPolitical,https://www.ispolitical.com,https://app.ispolitical.com,Political calling,NO,YES,getapp.com ispolitical
+82,OnlineCandidate.com,https://www.onlinecandidate.com,https://www.onlinecandidate.com/login,Political calling,YES,YES,g2.com onlinecandidate
+83,Mobilize,https://www.mobilize.us,https://www.mobilize.us/login,Political calling,YES,YES,getapp.com mobilize; ngpvan integration
+84,RumbleUp,https://rumbleup.com,https://app.rumbleup.com,Political SMS/P2P texting,NO,YES,rumbleup.com; hustle alternatives
+85,Hustle,https://hustle.com,https://app.hustle.com,Political SMS/P2P texting,NO,YES,rumbleup vs hustle; scale to win comparison
+86,Scale to Win,https://scaletowin.com,https://app.scaletowin.com,Political SMS/P2P texting,YES,YES,suttonsmart scale to win vs hustle
+87,Spoke,https://spoke.io,https://spoke.io/login,Political SMS/P2P texting,YES,YES,politicalcomms.com P2P comparison; spoke alternatives
+88,Peerly,https://peerly.com,https://app.peerly.com,Political SMS/P2P texting,NO,YES,peerly.com; politicalcomms P2P
+89,VoterPing,https://voterping.com,https://app.voterping.com,Political SMS/P2P texting,NO,YES,voterping.com p2p texting
+90,Political Comms,https://politicalcomms.com,https://app.politicalcomms.com,Political SMS/P2P texting;Mass SMS blast,NO,YES,politicalcomms.com blog
+91,Wonder Cave,https://wondercave.co,https://app.wondercave.co,Political SMS/P2P texting;Mass SMS blast,NO,YES,wondercave.co; politicalcomms P2P
+92,Tatango,https://www.tatango.com,https://app.tatango.com,Mass SMS blast;Political SMS/P2P texting,NO,YES,tatango.com political; getapp.com
+93,txtWave,https://txtwave.com,https://app.txtwave.com,Political SMS/P2P texting,NO,YES,solidarity.tech P2P guide mention
+94,Shift Media,https://shiftmedia.co,https://shiftmedia.co/login,Political SMS/P2P texting,NO,YES,shiftmedia.co p2p texting guide
+95,SimpleTexting,https://simpletexting.com,https://app.simpletexting.com,Mass SMS blast;Political SMS/P2P texting,YES,YES,slicktext political SMS guide
+96,SlickText,https://www.slicktext.com,https://app.slicktext.com,Mass SMS blast;Political SMS/P2P texting,YES,YES,slicktext.com political SMS guide 2026
+97,EZ Texting,https://www.eztexting.com,https://app.eztexting.com,Mass SMS blast,YES,YES,g2 dialmycalls compare; voicedrop alternatives
+98,TextMagic,https://www.textmagic.com,https://my.textmagic.com,Mass SMS blast,YES,YES,voicedrop callfire alternatives
+99,Mobile Commons,https://www.mobilecommons.com,https://app.mobilecommons.com,Mass SMS blast;Political SMS/P2P texting,NO,YES,advocacy texting search
+100,Upland Mobile Messaging,https://uplandsoftware.com/mobile-messaging,https://uplandsoftware.com/login,Mass SMS blast,NO,YES,advocacy texting platform search
+101,OpnSesame,https://www.opnsesame.com,https://app.opnsesame.com,Political SMS/P2P texting,NO,YES,P2P texting advocacy search
+102,Relay (Political Comms competitor),https://relaytxt.com,https://app.relaytxt.com,Political SMS/P2P texting,YES,YES,politicalcomms.com P2P comparison relay
+103,NationBuilder SMS,https://nationbuilder.com,https://nationbuilder.com/login,Mass SMS blast;Political SMS/P2P texting,YES,YES,g2.com political campaign; getapp nationbuilder
+104,Action Network,https://actionnetwork.org,https://actionnetwork.org/users/sign_in,Mass SMS blast;Political SMS/P2P texting,YES,YES,callhub CRM integration mention
+105,Bonterra Engaging Networks,https://www.engagingnetworks.net,https://www.engagingnetworks.net/login,Mass SMS blast;Advocacy,NO,YES,advocacy texting platform search
+106,Grassroots Unwired,https://www.grassrootsunwired.com,https://www.grassrootsunwired.com/login,Political SMS/P2P texting,NO,YES,grassroots calling platform search
+107,RevUp,https://www.revupsoftware.com,https://app.revupsoftware.com,Political SMS/P2P texting,NO,YES,political texting platform search
+108,Prompt.io,https://prompt.io,https://app.prompt.io,Political SMS/P2P texting,NO,YES,P2P texting political search
+109,L2 Political Texting Partners,https://www.l2political.com,https://www.l2political.com/login,Political SMS/P2P texting,NO,YES,politicalcomms.com L2 integration
+110,Campaign Verify,https://campaignverify.org,https://campaignverify.org/login,Political SMS/P2P texting compliance,YES,YES,voterping campaign verify guide
+111,TextMarks,https://www.textmarks.com,https://www.textmarks.com/login,Mass SMS blast,YES,YES,bulk SMS political advocacy search
+112,Trumpia,https://www.trumpia.com,https://app.trumpia.com,Mass SMS blast,YES,YES,mass SMS political campaign search
+113,PhoneBurner,https://www.phoneburner.com,https://www.phoneburner.com/login,Predictive/power dialer;Voice broadcast,YES,YES,g2 auto dialer; phoneburner RVM blog
+114,Convoso,https://www.convoso.com,https://app.convoso.com,Predictive dialer;Voice broadcast,NO,YES,capterra telemarketing; convoso blog
+115,Five9,https://www.five9.com,https://login.five9.com,Predictive dialer;Voice broadcast,NO,YES,g2 predictive dialer; ringcentral auto dialer
+116,Readymode,https://readymode.com,https://app.readymode.com,Predictive dialer,YES,YES,readymode.com; g2 predictive dialer
+117,CallTools,https://www.calltools.com,https://app.calltools.com,Predictive dialer;Voice broadcast,YES,YES,capterra telemarketing; kixie real estate blog
+118,Kixie PowerCall,https://www.kixie.com,https://app.kixie.com,Predictive/power dialer,YES,YES,g2 auto dialer; kixie sales blog
+119,CloudTalk,https://www.cloudtalk.io,https://my.cloudtalk.io,Predictive/power dialer,YES,YES,g2 predictive dialer; cloudtalk cold calling blog
+120,JustCall,https://justcall.io,https://app.justcall.io,Predictive/power dialer;Mass SMS,YES,YES,g2 best auto dialer; capterra telemarketing
+121,Nooks,https://www.nooks.ai,https://app.nooks.ai,Predictive/power dialer,YES,YES,g2 best auto dialer 2026
+122,Orum,https://www.orum.com,https://app.orum.com,Predictive/power dialer,NO,YES,g2 best auto dialer 2026
+123,Close CRM,https://close.com,https://app.close.com,Predictive/power dialer,YES,YES,g2 best auto dialer 2026
+124,Talkdesk,https://www.talkdesk.com,https://www.talkdesk.com/login,Predictive dialer,NO,YES,g2 predictive dialer; ringcentral compare
+125,Genesys Cloud CX,https://www.genesys.com,https://login.genesys.com,Predictive dialer,NO,YES,g2 auto dialer article
+126,NICE CXone,https://www.nice.com/cxone,https://login.niceincontact.com,Predictive dialer,NO,YES,g2 auto dialer article
+127,DialedIn CCaaS,https://www.dialedin.com,https://app.dialedin.com,Predictive dialer,NO,YES,capterra telemarketing
+128,Squaretalk,https://squaretalk.com,https://app.squaretalk.com,Predictive dialer,YES,YES,capterra telemarketing; g2 predictive dialer
+129,BatchDialer,https://batchdialer.com,https://app.batchdialer.com,Predictive/power dialer,YES,YES,batchdialer.com real estate blog
+130,Mojo Dialer,https://www.mojosells.com,https://app.mojosells.com,Predictive/power dialer,YES,YES,mojosells.com; kixie real estate blog
+131,REDX Power Dialer,https://www.redx.com/products/power-dialer,https://app.redx.com,Power dialer,YES,YES,redx.com power dialer
+132,Ricochet360,https://www.ricochet360.com,https://app.ricochet360.com,Predictive dialer,YES,YES,capterra telemarketing
+133,HoduCC,https://www.hoducc.com,https://www.hoducc.com/login,Predictive dialer;Voice broadcast,YES,YES,capterra telemarketing
+134,Dialshree,https://www.dialshree.com,https://www.dialshree.com/login,Predictive dialer,YES,YES,capterra telemarketing
+135,Voiptime Cloud,https://voiptime.net,https://voiptime.net/login,Predictive dialer,YES,YES,capterra telemarketing
+136,uContact,https://www.ucontact.com,https://www.ucontact.com/login,Predictive dialer;Voice broadcast,YES,YES,capterra telemarketing; sourceforge
+137,T-Max Predictive Dialer,https://www.tmaxdialer.com,https://www.tmaxdialer.com/login,Predictive dialer;Voice broadcast,YES,YES,sourceforge voice broadcast freelance
+138,FlashRev,https://www.flashrev.ai,https://app.flashrev.ai,Predictive/power dialer,YES,YES,g2 auto dialer article
+139,Salesfinity,https://salesfinity.co,https://app.salesfinity.co,Predictive/power dialer,YES,YES,g2 predictive dialer
+140,Koncert,https://www.koncert.com,https://app.koncert.com,Predictive dialer,NO,YES,g2 predictive dialer
+141,NobelBiz OMNI+,https://www.nobelbiz.com,https://www.nobelbiz.com/login,Predictive dialer,NO,YES,g2 predictive dialer
+142,Ring.io,https://www.ring.io,https://app.ring.io,Predictive dialer,YES,YES,g2 predictive dialer
+143,DialerAI,https://dialer.ai,https://dialer.ai/login,Predictive dialer;Voice broadcast,YES,YES,sourceforge dialerai
+144,iCallify,https://icallify.com,https://icallify.com/login,Predictive dialer;Voice broadcast,YES,YES,sourceforge icallify
+145,ICTDialer,https://www.ictinnovations.com/ictdialer,https://www.ictinnovations.com,Predictive dialer;Voice broadcast,YES,YES,sourceforge auto dialer search
+146,OSDial,https://www.osdial.com,https://www.osdial.com/login,Predictive dialer,YES,YES,sourceforge auto dialer search
+147,Kavkom,https://www.kavkom.com,https://app.kavkom.com,Voice broadcast;Predictive dialer,YES,YES,capterra telemarketing
+148,Nextiva,https://www.nextiva.com,https://www.nextiva.com/login,Voice broadcast;Predictive dialer,YES,YES,gitnux RVM; convoso VOIP blog
+149,RingCentral RingCX,https://www.ringcentral.com/ringcx,https://service.ringcentral.com,Predictive dialer;Voice broadcast,NO,YES,ringcentral.com auto-dialer
+150,8x8 Contact Center,https://www.8x8.com,https://sso.8x8.com,Predictive dialer,NO,YES,capterra telemarketing
+151,Aircall,https://aircall.io,https://dashboard.aircall.io,Power dialer,YES,YES,capterra telephony shortlist
+152,NUACOM,https://www.nuacom.com,https://app.nuacom.com,Voice broadcast;Predictive dialer,YES,YES,nuacom.com callfire alternative
+153,FluentStream,https://www.fluentstream.com,https://portal.fluentstream.com,Predictive dialer,YES,YES,capterra telemarketing
+154,SparkTG VCC,https://www.sparktg.com,https://www.sparktg.com/login,Predictive dialer;Voice broadcast,NO,YES,capterra telemarketing
+155,CxEngage,https://www.cxengage.com,https://www.cxengage.com/login,Predictive dialer,NO,YES,capterra telemarketing
+156,CrankWheel,https://crankwheel.com,https://crankwheel.com/login,Power dialer,YES,YES,capterra telemarketing
+157,Lusha Dialer,https://www.lusha.com,https://dashboard.lusha.com,Power dialer,YES,YES,capterra telemarketing
+158,Nectar Desk,https://www.nectardesk.com,https://app.nectardesk.com,Predictive dialer;Voice broadcast,YES,YES,sourceforge voice broadcast
+159,CallRail,https://www.callrail.com,https://app.callrail.com,Voice broadcast,YES,YES,nuacom callfire alternative
+160,CallHippo,https://callhippo.com,https://dialer.callhippo.com,Power dialer;Voice broadcast,YES,YES,sourceforge voice broadcast; calilio blog
+161,Calilio,https://www.calilio.com,https://app.calilio.com,Voice broadcast,YES,YES,calilio.com 12 voice broadcasting
+162,Alohaa.ai,https://alohaa.ai,https://app.alohaa.ai,Voice broadcast;Predictive dialer,YES,YES,sourceforge voice broadcast
+163,Sip2Dial,https://sip2dial.com,https://sip2dial.com/login,Predictive dialer;Voice broadcast,YES,YES,sourceforge voice broadcast
+164,The Real PBX,https://therealpbx.com,https://therealpbx.com/login,Voice broadcast,YES,YES,sourceforge voice broadcast
+165,Office24by7,https://office24by7.com,https://office24by7.com/login,Voice broadcast;Predictive dialer,YES,UNKNOWN,sourceforge voice broadcast
+166,MyOperator,https://myoperator.com,https://myoperator.com/login,Voice broadcast,YES,UNKNOWN,sourceforge voice broadcast
+167,CallmAi,https://callmai.com,https://app.callmai.com,Voice broadcast;Predictive dialer,YES,YES,g2.com AI marketplace
+168,PapriKall,https://www.paprikall.com,https://www.paprikall.com/login,Voice broadcast;Mass SMS,NO,UNKNOWN,g2.com paprikall vindaloo
+169,ChurnZero Call Center,https://www.churnzero.com,https://app.churnzero.com,Predictive dialer,NO,YES,outbound contact center search
+170,UJET,https://ujet.cx,https://ujet.cx/login,Predictive dialer,NO,YES,capterra telemarketing
+171,Amazon Connect Outbound,https://aws.amazon.com/connect,https://console.aws.amazon.com/connect,Predictive dialer;Voice broadcast,YES,YES,capterra telephony shortlist
+172,GoTo Connect,https://www.goto.com/connect,https://www.goto.com/login,Predictive dialer,YES,YES,cloudtalk cold calling blog
+173,Dialpad,https://www.dialpad.com,https://dialpad.com/login,Power dialer,YES,YES,cloudtalk cold calling blog
+174,Church Community Builder Calling,https://www.pushpay.com,https://www.pushpay.com/login,Voice broadcast;Mass SMS,NO,YES,church calling platform search
+175,OneBox Communications,https://onebox.com,https://onebox.com/login,Ringless voicemail,UNKNOWN,YES,gitnux RVM 2026
+176,Selly Service,https://www.sellyautomotive.com,https://www.sellyautomotive.com/login,Ringless voicemail,YES,YES,gitnux RVM 2026 sellys
+177,VM Direct,https://www.vmdirect.com,https://www.vmdirect.com/login,Ringless voicemail,YES,YES,ringless voicemail drop search
+178,ConnectAndSell,https://www.connectandsell.com,https://www.connectandsell.com/login,Predictive/power dialer,NO,YES,outbound dialer political search
+179,InsideSales (Xant),https://www.xant.ai,https://app.xant.ai,Predictive/power dialer,NO,YES,auto dialer campaign platform search
+180,Outreach,https://www.outreach.io,https://app.outreach.io,Power dialer,NO,YES,power dialer outbound campaign search
+181,SalesLoft,https://www.salesloft.com,https://app.salesloft.com,Power dialer,NO,YES,power dialer outbound campaign search
+182,Groove (Clari),https://www.groove.co,https://app.groove.co,Power dialer,NO,YES,power dialer outbound campaign search
+183,VanillaSoft,https://www.vanillasoft.com,https://app.vanillasoft.com,Predictive/power dialer,NO,YES,predictive dialer political campaign search
+184,Chorus Dialer,https://www.zoominfo.com/solutions/chorus,https://login.zoominfo.com,Power dialer,NO,YES,auto dialer campaign platform US
+185,Regal.io,https://www.regal.io,https://app.regal.io,Voice broadcast;Predictive dialer,NO,YES,AI outbound calling platform search
+186,Retreaver,https://www.retreaver.com,https://www.retreaver.com/login,Voice broadcast;IVR,YES,YES,IVR broadcast outbound campaign search
+187,Plum Voice (IVR),https://www.plumvoice.com,https://www.plumvoice.com/login,Voice broadcast;IVR,NO,YES,outbound IVR campaign platform search
+188,IntelePeer,https://intelepeer.com,https://intelepeer.com/login,Voice broadcast;IVR,NO,YES,outbound IVR campaign platform search
+189,CallTrackingMetrics,https://www.calltrackingmetrics.com,https://app.calltrackingmetrics.com,Voice broadcast,YES,YES,callfire alternative nuacom
+190,Grasshopper,https://grasshopper.com,https://my.grasshopper.com,Voice broadcast,YES,YES,nuacom callfire alternative
+191,Quo (OpenPhone),https://www.quo.com,https://my.openphone.com,Power dialer,YES,YES,nuacom callfire alternative
+192,Unitel Voice,https://www.unitelvoice.com,https://www.unitelvoice.com/login,Voice broadcast,YES,YES,capterra telephony shortlist
+193,Voiso,https://voiso.com,https://app.voiso.com,Predictive dialer,YES,YES,voiso.com predictive vs auto dialer
+194,Bitrix24 Call Center,https://www.bitrix24.com,https://www.bitrix24.com/login,Predictive dialer,YES,YES,capterra telemarketing
+195,Ooma Office Pro,https://www.ooma.com,https://my.ooma.com,Voice broadcast,YES,YES,capterra telephony shortlist
+196,VoterVoice (Bonterra),https://www.votervoice.net,https://www.votervoice.net/login,Political calling;Advocacy;Mass SMS,NO,YES,advocacy calling platform search
+197,LiveVox,https://www.livevox.com,https://www.livevox.com/login,Predictive dialer;Voice broadcast,NO,YES,outbound contact center political search
+198,Noble Systems,https://www.noble.com,https://www.noble.com/login,Predictive dialer;Voice broadcast,NO,YES,g2 predictive dialer
+199,NewMode,https://www.newmode.net,https://app.newmode.net,Political calling;Advocacy,YES,YES,patch through calls political platform search
+200,OneClickPolitics,https://www.oneclickpolitics.com,https://www.oneclickpolitics.com/login,Political calling;Advocacy,YES,YES,civic calling platform advocacy search
+201,Voter Gravity,https://www.votergravity.com,https://app.votergravity.com,Political calling;Political SMS/P2P texting,YES,YES,campaign calling software political search
+202,i360 Outreach,https://www.i360.com,https://www.i360.com/login,Political calling;Political SMS/P2P texting,NO,YES,voter contact calling platform search
+203,Civis Analytics Outreach,https://www.civisanalytics.com,https://www.civisanalytics.com/login,Political calling;Political SMS/P2P texting,NO,YES,GOTV calling platform search
+204,Decision Research Outreach,https://www.decisionresearch.com,https://www.decisionresearch.com/login,Political calling;Tele-townhall,NO,YES,tele-townhall service provider search
+205,Common Sense PAC Texting,https://www.commonsensepac.com,https://www.commonsensepac.com/login,Political SMS/P2P texting,UNKNOWN,YES,P2P texting advocacy platform search
+206,Community Connect Labs,https://www.communityconnectlabs.com,https://app.communityconnectlabs.com,Political SMS/P2P texting;Mass SMS blast,YES,YES,civic text messaging platform search

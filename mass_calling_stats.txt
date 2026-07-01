@@ -1,0 +1,50 @@
+MASS CALLING / POLITICAL SMS PLATFORM RESEARCH STATISTICS
+============================================================
+
+Date of research: 2026-07-01
+Total platforms found: 206
+
+BREAKDOWN BY SERVICE TYPE (may overlap)
+----------------------------------------
+  Voice broadcast / RVM tagged: 100
+  Political calling / tele-townhall tagged: 38
+  Political SMS / P2P / mass SMS tagged: 38
+  Predictive / power dialer tagged: 84
+  Multi-channel primary: 6
+
+Total searches performed: 90
+
+SOURCES SEARCHED
+----------------------------------------
+  - Google Web Search
+  - G2.com
+  - Capterra.com
+  - GetApp.com
+  - SourceForge.net
+  - ZipDo.co
+  - GitNux.org
+  - Nerdisa.com
+  - RankedSuite.com
+  - Calilio.com
+  - PoliticalComms.com
+  - SuttonSmart.com
+  - B2BSalesTools.com
+  - SelectHub.com
+  - Company websites
+
+PLATFORMS NEEDING MANUAL VERIFICATION
+----------------------------------------
+  - OneBox
+  - OneBox Communications
+  - PapriKall
+  - Office24by7
+  - MyOperator
+  - Maverick Mailing
+  - VM Direct
+  - Townhall Interactive
+  - Fireside
+  - Database Systems Corp (DSC)
+  - Common Sense PAC Texting
+  - Civis Analytics Outreach
+  - Decision Research Outreach
+  - i360 Outreach
