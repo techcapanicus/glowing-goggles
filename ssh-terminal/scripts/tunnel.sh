@@ -27,5 +27,11 @@ if [ ! -x "$CLOUDFLARED" ]; then
   chmod +x "$CLOUDFLARED"
 fi
 
+# QUIC (the default transport) is UDP-based and some sandboxed/restrictive
+# networks silently drop idle UDP flows, which shows up to users as a
+# transient "Error 1033 / Cloudflare Tunnel error" until cloudflared
+# reconnects. HTTP/2 (TCP-based) avoids that class of issue.
+PROTOCOL="${CLOUDFLARED_PROTOCOL:-http2}"
+
 echo "Tunneling http://localhost:$PORT -- watch below for your https://*.trycloudflare.com URL" >&2
-exec "$CLOUDFLARED" tunnel --url "http://localhost:$PORT"
+exec "$CLOUDFLARED" tunnel --protocol "$PROTOCOL" --url "http://localhost:$PORT"
