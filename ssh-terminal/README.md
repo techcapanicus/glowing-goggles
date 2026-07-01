@@ -61,6 +61,81 @@ set up a [named Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-
 `APP_PASSWORD` set — a quick tunnel makes this server (and therefore the SSH
 session it opens) reachable by anyone with the URL until you stop it.
 
+## Deploying to Azure Container Apps
+
+If you'd rather have this always running on a stable, HTTPS-by-default URL
+than run it in this sandbox/behind a tunnel, `Dockerfile` in this directory
+lets you deploy it to [Azure Container Apps](https://azure.microsoft.com/products/container-apps)
+entirely from Azure Cloud Shell (`https://shell.azure.com`) — no local Docker,
+and no need to hand Azure credentials to anything outside your own session.
+
+```bash
+# Avoid bash history-expansion mangling passwords containing "!"
+set +H
+
+az account set --subscription "<your-subscription-id>"
+RESOURCE_GROUP="TERMINALAPP"     # reuse an existing group, or create one
+LOCATION="eastus"                # use a region where you have compute quota
+ACR_NAME="sshterminalacr$RANDOM" # must be globally unique, alnum only
+ENV_NAME="ssh-terminal-env"
+APP_NAME="ssh-terminal"
+
+az provider register --namespace Microsoft.ContainerRegistry
+az provider register --namespace Microsoft.App
+az provider register --namespace Microsoft.OperationalInsights
+az extension add --name containerapp --upgrade --yes
+
+az acr create --name "$ACR_NAME" --resource-group "$RESOURCE_GROUP" \
+  --location "$LOCATION" --sku Basic --admin-enabled true
+
+git clone https://github.com/techcapanicus/glowing-goggles.git
+cd glowing-goggles/ssh-terminal
+
+# Builds the image in the cloud via ACR Tasks -- no local Docker needed
+az acr build --registry "$ACR_NAME" --image ssh-terminal:latest .
+
+az containerapp env create --name "$ENV_NAME" \
+  --resource-group "$RESOURCE_GROUP" --location "$LOCATION"
+
+ACR_LOGIN_SERVER=$(az acr show --name "$ACR_NAME" --query loginServer -o tsv)
+ACR_USER=$(az acr credential show --name "$ACR_NAME" --query username -o tsv)
+ACR_PASS=$(az acr credential show --name "$ACR_NAME" --query "passwords[0].value" -o tsv)
+
+az containerapp create \
+  --name "$APP_NAME" --resource-group "$RESOURCE_GROUP" \
+  --environment "$ENV_NAME" \
+  --image "$ACR_LOGIN_SERVER/ssh-terminal:latest" \
+  --registry-server "$ACR_LOGIN_SERVER" \
+  --registry-username "$ACR_USER" --registry-password "$ACR_PASS" \
+  --target-port 8080 --ingress external \
+  --env-vars \
+    SSH_HOST=172.174.232.34 SSH_PORT=22 SSH_USER=adminuser \
+    SSH_PASSWORD='<your-ssh-password>' \
+    APP_PASSWORD='<pick-a-strong-app-password>' \
+    PORT=8080 HOST=0.0.0.0
+
+az containerapp show --name "$APP_NAME" --resource-group "$RESOURCE_GROUP" \
+  --query properties.configuration.ingress.fqdn -o tsv
+```
+
+The last command prints the app's `*.azurecontainerapps.io` FQDN — the app
+is reachable at `https://<that-fqdn>` with a free, automatically-managed TLS
+certificate. WebSockets work over Container Apps ingress with no extra
+config. Redeploy a new image later with:
+
+```bash
+az acr build --registry "$ACR_NAME" --image ssh-terminal:latest .
+az containerapp update --name "$APP_NAME" --resource-group "$RESOURCE_GROUP" \
+  --image "$ACR_LOGIN_SERVER/ssh-terminal:latest"
+```
+
+> Azure tracks App Service (`Microsoft.Web`) and regular VM (`Microsoft.Compute`)
+> compute against separate quota pools from Container Apps/Container Instances.
+> If `az appservice plan create` fails with `Current Limit (Total VMs): 0`,
+> that's an App-Service-specific quota — it doesn't mean Container Apps or ACI
+> are blocked too (and vice versa). Request quota increases (portal → "Quotas")
+> for whichever specific service you end up using.
+
 ## Notes
 
 - Each browser tab that connects opens its **own** SSH connection/shell to
