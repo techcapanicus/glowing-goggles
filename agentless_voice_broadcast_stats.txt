@@ -1,0 +1,31 @@
+AGENTLESS VOICE BROADCAST RESEARCH STATISTICS
+=======================================================
+
+Date: 2026-07-01
+Total platforms: 90
+Inclusion bar: Mass agentless voice broadcasting ONLY
+
+BREAKDOWN BY TYPE
+----------------------------------------
+  robocall: 31
+  rvm: 15
+  outbound_ivr: 7
+  emergency_voice: 26
+  ai_voice_batch: 11
+
+Searches performed: 22
+
+CXENGAGE NOTE
+----------------------------------------
+CxEngage (Enghouse) is NOT included. It is a CCaaS platform with
+'Voice Outbound Campaigns' for agent-led dialing via AutoReach integration,
+not a native mass pre-recorded voice blast / robocall product.
+
+NEEDS MANUAL VERIFICATION
+----------------------------------------
+  - OneBox
+  - BroadcastByPhone (standalone)
+  - Notifyre Voice Broadcast
+  - VM Direct
+  - Call-Em-All vs Text-Em-All relationship
+  - Blackboard Connect product status

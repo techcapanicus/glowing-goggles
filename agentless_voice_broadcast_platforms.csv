@@ -1,0 +1,91 @@
+#,Name,Website_URL,Login_URL,Broadcast_Type,Self_Serve,US_Focused,Source_URL
+1,CallFire,https://www.callfire.com,https://www.callfire.com/login,Voice broadcast;Robocall;Outbound IVR,YES,YES,callfire.com/common-uses/robocalls
+2,DialMyCalls,https://www.dialmycalls.com,https://www.dialmycalls.com/login,Voice broadcast;Robocall,YES,YES,dialmycalls.com/voice-broadcasting
+3,CallHub Voice Broadcasting,https://callhub.io/platform/voice-broadcasting,https://callhub.io/login,Voice broadcast;Robocall;Outbound IVR,YES,YES,callhub.io/platform/voice-broadcasting; robocalls
+4,CallHub Robocalls,https://callhub.io/platform/robocalls,https://callhub.io/login,Robocall;Voice broadcast,YES,YES,callhub.io/platform/robocalls
+5,Sigma Voice,https://sigmavoice.com,https://sigmavoice.com/login,Voice broadcast;Robocall;Outbound IVR,YES,YES,sigmavoice.com/robocalls; automated-voice-broadcasting
+6,VoiceShot,https://www.voiceshot.com,https://www.voiceshot.com/login,Voice broadcast;Robocall;Outbound IVR,YES,YES,modern.voiceshot.com/outboundcalls.asp
+7,Robotalker,https://robotalker.com,https://robotalker.com/login,Voice broadcast;Robocall,YES,YES,robotalker.com FAQ bulk robocalls
+8,Text-Em-All,https://www.text-em-all.com,https://www.text-em-all.com/login,Voice broadcast;Robocall,YES,YES,text-em-all.com/automated-calling-system
+9,Call Loop,https://www.callloop.com,https://www.callloop.com/login,Voice broadcast;Robocall;Ringless voicemail,YES,YES,callloop.com/voice-broadcast
+10,CallMultiplier,https://www.callmultiplier.com,https://www.callmultiplier.com/login,Voice broadcast;Robocall,YES,YES,callmultiplier.com
+11,One Call Now,https://onecallnow.crisis24.com,https://onecallnow.crisis24.com/login,Voice broadcast;Robocall,YES,YES,onecallnow.crisis24.com mass calling
+12,CallingPost,https://www.callingpost.com,https://www.callingpost.com/login,Voice broadcast;Robocall,YES,YES,callingpost.com; capterra emergency notification
+13,ChurchCalling.com,https://www.churchcalling.com,https://www.churchcalling.com/login,Voice broadcast;Robocall,YES,YES,churchcalling.com voice broadcasting
+14,InterCloud9 IVR Voice Messaging,https://www.intercloud9.com/products/ivr-voice-messaging.html,https://www.intercloud9.com/login,Voice broadcast;Outbound IVR,YES,YES,intercloud9.com/products/ivr-voice-messaging
+15,Voicent BroadcastByPhone,https://www.voicent.com/broadcast-by-phone,https://www.voicent.com/login,Voice broadcast;Robocall,YES,YES,voicent.com howto_use_autodialer.php
+16,Voicent Live,https://www.voicent.com/voicent-live,https://www.voicent.com/login,Voice broadcast;Outbound IVR,YES,YES,voicent.com; sourceforge Voicent Communications
+17,SimplyCast,https://www.simplycast.com,https://www.simplycast.com/login,Voice broadcast;Robocall,YES,YES,sourceforge voice broadcast
+18,GOP Calls,https://gopcalls.com,https://gopcalls.com/login,Robocall;Voice broadcast,NO,YES,gopcalls.com/what-we-do political automated calls
+19,RoboCent,https://www.robocent.com,https://app.robocent.com,Robocall;Voice broadcast,YES,YES,getapp.com robocent; fullpac
+20,FullPAC Voice & RoboCalls,https://www.gotv.com/products,https://app.gotv.com,Robocall;Voice broadcast,NO,YES,gotv.com products voice robocalls
+21,Callex Solutions,https://callexsolutions.com/solution/voice-broadcast,https://callexsolutions.com/login,Voice broadcast;Outbound IVR,NO,YES,callexsolutions.com voice broadcast
+22,ICTBroadcast,https://www.ictbroadcast.com/voice-broadcast,https://www.ictbroadcast.com/login,Voice broadcast;Robocall,YES,YES,ictbroadcast.com/voice-broadcast
+23,DialerAI,https://dialer.ai,https://dialer.ai/login,Voice broadcast;Robocall,YES,YES,sourceforge DialerAI voice broadcast
+24,RapBooster,https://rapbooster.com,https://rapbooster.com/login,Voice broadcast;Robocall,YES,YES,capterra telemarketing voice broadcasting
+25,CallBlitzer,https://callblitzer.com,https://callblitzer.com/login,Voice broadcast;Robocall,YES,YES,sourceforge voice broadcast
+26,VoiceBlaze,https://www.voiceblaze.com,https://www.voiceblaze.com/login,Voice broadcast,YES,YES,sourceforge voice broadcast
+27,Messagizer,https://messagizer.com,https://messagizer.com/login,Voice broadcast;Robocall,YES,YES,sourceforge voice broadcast
+28,The Call Pro,https://www.thecallpro.com,https://www.thecallpro.com/login,Voice broadcast,YES,YES,sourceforge voice broadcast
+29,Zendly,https://zendly.com,https://zendly.com/login,Voice broadcast,YES,YES,sourceforge voice broadcast
+30,Unitel Voice,https://www.unitelvoice.com,https://www.unitelvoice.com/login,Voice broadcast,YES,YES,capterra telephony voice broadcasting
+31,Emitrr,https://emitrr.com,https://app.emitrr.com,Voice broadcast,YES,YES,capterra telephony
+32,RingCentral RingCX Voice Broadcast,https://www.ringcentral.com/voice-broadcast-dialer.html,https://service.ringcentral.com,Voice broadcast;Robocall,NO,YES,ringcentral.com voice-broadcast-dialer
+33,BroadcastByPhone (standalone),https://www.broadcastbyphone.com,https://www.broadcastbyphone.com/login,Voice broadcast;Robocall,YES,YES,zipdo.co voice broadcast software list
+34,Notifyre Voice Broadcast,https://notifyre.com,https://app.notifyre.com,Voice broadcast,YES,YES,mass voice calling software search
+35,Slybroadcast,https://www.slybroadcast.com,https://www.slybroadcast.com/login,Ringless voicemail,YES,YES,slybroadcast.com
+36,VoiceDrop,https://voicedrop.ai,https://app.voicedrop.ai,Ringless voicemail,YES,YES,voicedrop.ai
+37,Drop Cowboy,https://dropcowboy.com,https://app.dropcowboy.com,Ringless voicemail,YES,YES,dropcowboy.com
+38,VoApps DirectDrop,https://www.voapps.com/ringless-voicemail,https://www.voapps.com/login,Ringless voicemail,NO,YES,voapps.com ringless voicemail
+39,Drop (Drop.co),https://drop.co,https://app.drop.co,Ringless voicemail,YES,YES,drop.co ringless voicemail
+40,LeadsRain,https://leadsrain.com,https://leadsrain.com/login,Ringless voicemail,YES,YES,leadsrain.com blog RVM
+41,Dialer360,https://dialer360.com,https://dialer360.com/login,Ringless voicemail,YES,YES,leadsrain blog; sourceforge
+42,Stratics Networks,https://straticsnetworks.com,https://straticsnetworks.com/login,Ringless voicemail,YES,YES,sourceforge; dropcowboy alternatives
+43,SlyDial,https://www.slydial.com,https://www.slydial.com/login,Ringless voicemail,YES,YES,b2bsalestools RVM category
+44,Voiply,https://voiply.com,https://voiply.com/login,Ringless voicemail,YES,YES,gitnux RVM software
+45,My Call Cloud No Dial,https://www.mycallcloud.com,https://www.mycallcloud.com/login,Ringless voicemail,NO,YES,slybroadcast.com partner mention
+46,Maverick Mailing,https://www.maverickmailing.com,https://www.maverickmailing.com/login,Ringless voicemail,NO,YES,gitnux RVM software 2026
+47,VM Direct,https://www.vmdirect.com,https://www.vmdirect.com/login,Ringless voicemail,YES,YES,ringless voicemail provider search
+48,OneBox,https://www.onebox.com,https://www.onebox.com/login,Ringless voicemail,UNKNOWN,YES,gitnux RVM software 2026
+49,Everbridge,https://www.everbridge.com,https://www.everbridge.com/login,Voice broadcast;Emergency mass voice,NO,YES,everbridge.com mass notification
+50,CodeRED by Crisis24,https://codered.crisis24.com,https://codered.crisis24.com/login,Voice broadcast;Emergency mass voice,NO,YES,codered.crisis24.com emergency notification
+51,OnSolve Platform,https://www.onsolve.com,https://www.onsolve.com/login,Voice broadcast;Emergency mass voice,NO,YES,capterra emergency notification; everbridge competitors
+52,MIR3 (OnSolve),https://www.mir3.com,https://www.mir3.com/login,Voice broadcast;Emergency mass voice,NO,YES,everbridge competitors OnSolve MIR3
+53,Send Word Now (OnSolve),https://www.sendwordnow.com,https://www.sendwordnow.com/login,Voice broadcast;Emergency mass voice,NO,YES,everbridge competitors
+54,Rave Alert,https://www.ravemobilesafety.com/rave-alert,https://www.ravemobilesafety.com/login,Voice broadcast;Emergency mass voice,NO,YES,motorolasolutions.com rave alert
+55,AlertMedia,https://www.alertmedia.com,https://www.alertmedia.com/login,Voice broadcast;Emergency mass voice,NO,YES,capterra emergency notification
+56,Regroup Mass Notification,https://www.regroup.com,https://www.regroup.com/login,Voice broadcast;Emergency mass voice,NO,YES,capterra emergency notification
+57,TrueDialog,https://www.truedialog.com,https://www.truedialog.com/login,Voice broadcast;Emergency mass voice,YES,YES,capterra emergency notification
+58,RedFlag,https://www.redflag.com,https://www.redflag.com/login,Voice broadcast;Emergency mass voice,NO,YES,capterra emergency notification
+59,Kokomo24/7,https://www.kokomo247.com,https://www.kokomo247.com/login,Voice broadcast;Emergency mass voice,YES,YES,capterra emergency notification
+60,Hyper-Reach,https://www.hyper-reach.com,https://www.hyper-reach.com/login,Voice broadcast;Emergency mass voice,NO,YES,hyper-reach.com vs everbridge
+61,SwiftReach,https://www.swiftreach.com,https://www.swiftreach.com/login,Voice broadcast;Emergency mass voice,NO,YES,everbridge competitors search
+62,Omnilert,https://www.omnilert.com,https://www.omnilert.com/login,Voice broadcast;Emergency mass voice,NO,YES,everbridge competitors search
+63,DeskAlerts,https://www.deskalerts.com,https://www.deskalerts.com/login,Voice broadcast;Emergency mass voice,NO,YES,capterra emergency notification
+64,Crises Control,https://www.crises-control.com,https://www.crises-control.com/login,Voice broadcast;Emergency mass voice,NO,YES,capterra emergency notification
+65,DERDACK Enterprise Alert,https://www.derdack.com,https://www.derdack.com/login,Voice broadcast;Emergency mass voice,NO,YES,capterra emergency notification
+66,Blackboard Connect,https://www.blackboard.com/connect,https://www.blackboard.com/login,Voice broadcast;Emergency mass voice,NO,YES,school mass calling platform search
+67,ParentSquare Broadcast,https://www.parentsquare.com,https://www.parentsquare.com/login,Voice broadcast;Emergency mass voice,NO,YES,school mass notification search
+68,CDYNE Notify,https://www.cdyne.com/notify,https://www.cdyne.com/login,Voice broadcast;Emergency mass voice,YES,YES,sourceforge CDYNE voice broadcast
+69,Synthflow AI,https://synthflow.ai,https://app.synthflow.ai,AI agentless outbound voice batch,YES,YES,docs.synthflow.ai workflows outbound; ai telemarketing
+70,Retell AI Batch Call,https://www.retellai.com/features/batch-call,https://dashboard.retellai.com,AI agentless outbound voice batch,YES,YES,retellai.com/features/batch-call
+71,Bland AI,https://www.bland.ai,https://app.bland.ai,AI agentless outbound voice batch,YES,YES,aioutboundcalling.ai best platforms
+72,Vapi,https://vapi.ai,https://dashboard.vapi.ai,AI agentless outbound voice batch,YES,YES,voxrater.com voice AI outbound
+73,Bigly Sales,https://www.biglysales.com,https://app.biglysales.com,AI agentless outbound voice batch,NO,YES,aioutboundcalling.ai best platforms
+74,Air AI,https://air.ai,https://app.air.ai,AI agentless outbound voice batch,NO,YES,AI outbound calling platform search
+75,Goodcall,https://www.goodcall.com,https://app.goodcall.com,AI agentless outbound voice batch,YES,YES,AI outbound voice agent search
+76,PolyAI Outbound,https://poly.ai,https://poly.ai/login,AI agentless outbound voice batch,NO,YES,AI outbound calling platform search
+77,Replicant,https://www.replicant.com,https://www.replicant.com/login,AI agentless outbound voice batch,NO,YES,AI outbound calling platform search
+78,Parloa,https://www.parloa.com,https://www.parloa.com/login,AI agentless outbound voice batch,NO,YES,AI outbound voice agent search
+79,Tele-Town Hall,https://teletownhall.com,https://teletownhall.com/login,Mass outbound dial-to-event;Voice broadcast,NO,YES,teletownhall.com tele virtual town halls
+80,TTHM (Telephone Town Hall Meeting),https://tthm.com,https://tthm.com/login,Mass outbound dial-to-event,NO,YES,tthm.com teletownhalls outbound dial
+81,Community Phone,https://www.communityphone.org,https://www.communityphone.org/login,Voice broadcast;Robocall,YES,YES,calilio.com automated voice messaging
+82,InformaCast (Singlewire),https://www.singlewire.com/informacast,https://www.singlewire.com/login,Voice broadcast;Emergency mass voice,NO,YES,saashub.com voice broadcasting
+83,SnapComms (Everbridge),https://www.snapcomms.com,https://www.snapcomms.com/login,Voice broadcast;Emergency mass voice,NO,YES,saashub.com voice broadcasting
+84,AtHoc Alert (BlackBerry),https://www.blackberry.com/us/en/products/critical-event-management/athoc,https://www.blackberry.com/login,Voice broadcast;Emergency mass voice,NO,YES,saashub.com voice broadcasting
+85,Honeywell Instant Alert,https://www.honeywell.com,https://www.honeywell.com/login,Voice broadcast;Emergency mass voice,NO,YES,saashub.com voice broadcasting
+86,IamResponding,https://www.iamresponding.com,https://www.iamresponding.com/login,Voice broadcast;Emergency mass voice,NO,YES,saashub.com voice broadcasting
+87,Konexus,https://www.konexus.com,https://www.konexus.com/login,Voice broadcast;Emergency mass voice,NO,YES,capterra emergency notification
+88,Mobile Text Alerts,https://mobile-text-alerts.com,https://mobile-text-alerts.com/login,Voice broadcast;Robocall,YES,YES,capterra emergency notification
+89,PeakSend AI,https://peaksend.ai,https://app.peaksend.ai,AI agentless outbound voice batch,YES,YES,g2 AI marketplace voice outbound
+90,Call-Em-All,https://www.call-em-all.com,https://www.call-em-all.com/login,Voice broadcast;Robocall,YES,YES,saashub.com voice broadcasting
