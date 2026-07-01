@@ -21,8 +21,15 @@ CxEngage (Enghouse) is NOT included. It is a CCaaS platform with
 'Voice Outbound Campaigns' for agent-led dialing via AutoReach integration,
 not a native mass pre-recorded voice blast / robocall product.
 
+NAME COLLISION WARNING (NOT THE SAME SERVICE)
+----------------------------------------
+  - Replicant (replicant.com / replicant.ai) = enterprise AI contact-center voice agents
+  - ReplicANT (replicant.ant-automation.com) = ANT Automation industrial simulation
+  - Google AI Overviews often merge these incorrectly due to similar names/URLs
+
 NEEDS MANUAL VERIFICATION
 ----------------------------------------
+  - Replicant (replicant.com) — confirm mass OUTBOUND batch vs primarily inbound CX
   - OneBox
   - BroadcastByPhone (standalone)
   - Notifyre Voice Broadcast

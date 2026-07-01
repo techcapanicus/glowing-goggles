@@ -714,13 +714,14 @@ Research date: 2026-07-01
 - US focused: YES
 - Source: AI outbound calling platform search
 
-**88. Replicant**
+**88. Replicant (replicant.com — NOT ReplicANT/ANT Automation)**
 - URL: https://www.replicant.com
 - Login: https://www.replicant.com/login
-- Broadcast type: AI agentless outbound voice batch
+- Broadcast type: AI voice agents (contact center; verify outbound batch fit)
 - Self-serve: NO
 - US focused: YES
-- Source: AI outbound calling platform search
+- Source: replicant.com platform; NOT replicant.ant-automation.com
+- Notes: Do not confuse with ReplicANT by ANT Automation (industrial simulation at replicant.ant-automation.com)
 
 **89. Parloa**
 - URL: https://www.parloa.com

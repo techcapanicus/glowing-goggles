@@ -75,7 +75,7 @@
 74,Air AI,https://air.ai,https://app.air.ai,AI agentless outbound voice batch,NO,YES,AI outbound calling platform search
 75,Goodcall,https://www.goodcall.com,https://app.goodcall.com,AI agentless outbound voice batch,YES,YES,AI outbound voice agent search
 76,PolyAI Outbound,https://poly.ai,https://poly.ai/login,AI agentless outbound voice batch,NO,YES,AI outbound calling platform search
-77,Replicant,https://www.replicant.com,https://www.replicant.com/login,AI agentless outbound voice batch,NO,YES,AI outbound calling platform search
+77,Replicant (replicant.com — NOT ReplicANT/ANT Automation),https://www.replicant.com,https://www.replicant.com/login,AI voice agents (contact center; verify outbound batch fit),NO,YES,replicant.com platform; NOT replicant.ant-automation.com
 78,Parloa,https://www.parloa.com,https://www.parloa.com/login,AI agentless outbound voice batch,NO,YES,AI outbound voice agent search
 79,Tele-Town Hall,https://teletownhall.com,https://teletownhall.com/login,Mass outbound dial-to-event;Voice broadcast,NO,YES,teletownhall.com tele virtual town halls
 80,TTHM (Telephone Town Hall Meeting),https://tthm.com,https://tthm.com/login,Mass outbound dial-to-event,NO,YES,tthm.com teletownhalls outbound dial
