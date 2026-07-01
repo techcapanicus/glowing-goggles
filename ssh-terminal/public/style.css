@@ -1,0 +1,161 @@
+:root {
+  --bg: #0d1117;
+  --bar-bg: #161b22;
+  --border: #30363d;
+  --text: #c9d1d9;
+  --accent: #58a6ff;
+  --ok: #3fb950;
+  --err: #f85149;
+  --warn: #d29922;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+#topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--bar-bg);
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  flex: 0 0 auto;
+  user-select: none;
+}
+
+#topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--warn);
+  display: inline-block;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.dot.ok {
+  background: var(--ok);
+  color: var(--ok);
+}
+
+.dot.err {
+  background: var(--err);
+  color: var(--err);
+}
+
+.dot.warn {
+  background: var(--warn);
+  color: var(--warn);
+}
+
+#reconnect-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+#reconnect-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+#terminal {
+  flex: 1 1 auto;
+  padding: 8px;
+  min-height: 0;
+}
+
+#terminal .xterm {
+  height: 100%;
+}
+
+#auth-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 17, 23, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#auth-overlay.hidden {
+  display: none;
+}
+
+#auth-form {
+  background: var(--bar-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(320px, 90vw);
+}
+
+#auth-form label {
+  font-size: 13px;
+  color: var(--text);
+}
+
+#auth-form input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+#auth-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+#auth-form button {
+  background: var(--accent);
+  border: none;
+  color: #0d1117;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 9px 12px;
+  cursor: pointer;
+}
+
+.error {
+  color: var(--err);
+  font-size: 12px;
+  margin: 0;
+}
+
+.error.hidden {
+  display: none;
+}

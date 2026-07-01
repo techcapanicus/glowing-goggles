@@ -52,3 +52,9 @@ for repo-based runs. Run `python3 provision_ssh.py --help` for all options.
 > The Semaphore server must be able to reach the playbook repository (a public
 > Git URL, or a local path that exists on the server). Omit `--dry-run` only
 > when you intend to actually modify `authorized_keys` on the target hosts.
+
+## Browser SSH terminal (`ssh-terminal/`)
+
+A standalone Node app that gives you a fast `xterm.js`-based terminal in the
+browser, bridged over WebSocket to a real SSH session on a single configured
+target host. See [`ssh-terminal/README.md`](ssh-terminal/README.md) for setup.

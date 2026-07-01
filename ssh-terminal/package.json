@@ -1,0 +1,18 @@
+{
+  "name": "ssh-terminal",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Smooth, fast browser-based SSH terminal (xterm.js + ssh2 WebSocket bridge)",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "ssh2": "^1.16.0",
+    "ws": "^8.18.0"
+  }
+}
