@@ -17,4 +17,6 @@ yarn-error.log*
 # Genesys exploration (local automation; may contain credentials)
 /genesys_*.py
 /artifacts/genesys_report.json
+/artifacts/genesys_z1_report.json
+/artifacts/genesys_z1_totp.local
 /artifacts/mfa_page.html
