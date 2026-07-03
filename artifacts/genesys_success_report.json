@@ -1,0 +1,22 @@
+{
+  "success": true,
+  "result": "ININ-OUTBOUND-DISCONNECT",
+  "campaign_id": "086ec21d-fd64-4589-830f-befd3ddcc0fb",
+  "campaign_name": "WinReplay-f76da4",
+  "contact_list_id": "732100f9-d221-4ba1-9ccf-436764283822",
+  "phone": "+17149570044",
+  "winning_config": {
+    "site": "PureCloud Voice - AWS",
+    "site_id": "5168bf49-a042-449b-8cdf-290b0d6e9fdd",
+    "edge_group": null,
+    "dialingMode": "agentless",
+    "noAnswerTimeout": 30,
+    "alwaysRunning": false,
+    "callerName": "It's Me Silly",
+    "callerAddress": "3175550123",
+    "cars_person_reaction": "transfer_flow",
+    "flow_id": "b05d6954-e241-4364-b39e-65dda2e3a9fe"
+  },
+  "timestamp_utc": "2026-07-03T07:09:24Z",
+  "script": "genesys_replay_winner.py"
+}
