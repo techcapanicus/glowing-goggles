@@ -13,3 +13,8 @@ dist-ssr
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Genesys exploration (local automation; may contain credentials)
+/genesys_*.py
+/artifacts/genesys_report.json
+/artifacts/mfa_page.html
