@@ -1,0 +1,60 @@
+---
+- name: Test SSH auth with every available private key
+  hosts: all
+  gather_facts: false
+  vars:
+    ssh_target: "{{ target_host | default('64.23.139.247') }}"
+    ssh_user: "{{ target_user | default('root') }}"
+
+  tasks:
+    - name: Test private keys on droplet
+      ansible.builtin.script:
+        cmd: "{{ playbook_dir }}/../scripts/test_ssh_keys.sh"
+        executable: /bin/bash
+      environment:
+        TARGET_HOST: "{{ ssh_target }}"
+        TARGET_USER: "{{ ssh_user }}"
+        LABEL: droplet
+      register: droplet_tests
+      changed_when: false
+      failed_when: false
+
+    - name: Show droplet test stderr if stdout empty
+      ansible.builtin.debug:
+        msg: "droplet stderr: {{ droplet_tests.stderr_lines | default([]) }}"
+      when: droplet_tests.stdout_lines | default([]) | length == 0
+
+    - name: Show droplet key test results
+      ansible.builtin.debug:
+        var: droplet_tests.stdout_lines
+
+- name: Test private keys on Semaphore controller
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    ssh_target: "{{ target_host | default('64.23.139.247') }}"
+    ssh_user: "{{ target_user | default('root') }}"
+
+  tasks:
+    - name: Resolve Semaphore inventory connection key
+      ansible.builtin.set_fact:
+        connection_key: >-
+          {{ hostvars[groups['all'][0]]['ansible_ssh_private_key_file'] | default('') }}
+
+    - name: Test private keys on controller
+      ansible.builtin.script:
+        cmd: "{{ playbook_dir }}/../scripts/test_ssh_keys.sh"
+        executable: /bin/bash
+      environment:
+        TARGET_HOST: "{{ ssh_target }}"
+        TARGET_USER: "{{ ssh_user }}"
+        LABEL: controller
+        EXTRA_KEY: "{{ connection_key | default('') }}"
+      register: controller_tests
+      changed_when: false
+      failed_when: false
+
+    - name: Show controller key test results
+      ansible.builtin.debug:
+        var: controller_tests.stdout_lines

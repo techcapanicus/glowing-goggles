@@ -37,6 +37,8 @@ Run ``./provision_ssh.py --help`` for the full list of options.
 import argparse
 import json
 import os
+import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -49,61 +51,9 @@ DEFAULT_PLAYBOOK = "provision_ssh.yml"
 DEFAULT_BRANCH = "master"
 
 # --------------------------------------------------------------------------- #
-# Embedded, idempotent playbook.
-#
-# It connects as the bootstrap user (configured on the inventory's SSH key),
-# escalates with sudo, and adds ``new_public_key`` to the target user's
-# authorized_keys with the correct permissions. lineinfile keeps it idempotent
-# without requiring any external Ansible collections.
+# Embedded playbook lives in ansible/provision_ssh.yml (copied for local repos).
 # --------------------------------------------------------------------------- #
-PLAYBOOK_CONTENT = """\
----
-- name: Provision SSH key access
-  hosts: all
-  gather_facts: false
-  become: true
-  vars:
-    target_user: "{{ target_user | mandatory }}"
-    new_public_key: "{{ new_public_key | mandatory }}"
-    ssh_dir: >-
-      {{ '/root/.ssh' if target_user == 'root'
-         else '/home/' + target_user + '/.ssh' }}
-  tasks:
-    - name: Ensure the target user exists
-      ansible.builtin.user:
-        name: "{{ target_user }}"
-        state: present
-      when: target_user != 'root'
-
-    - name: Ensure the .ssh directory exists with correct permissions
-      ansible.builtin.file:
-        path: "{{ ssh_dir }}"
-        state: directory
-        owner: "{{ target_user }}"
-        group: "{{ target_user }}"
-        mode: "0700"
-
-    - name: Ensure authorized_keys exists with correct permissions
-      ansible.builtin.file:
-        path: "{{ ssh_dir }}/authorized_keys"
-        state: touch
-        owner: "{{ target_user }}"
-        group: "{{ target_user }}"
-        mode: "0600"
-        modification_time: preserve
-        access_time: preserve
-
-    - name: Add the public key (idempotent, no duplicates)
-      ansible.builtin.lineinfile:
-        path: "{{ ssh_dir }}/authorized_keys"
-        line: "{{ new_public_key }}"
-        state: present
-        create: false
-        insertafter: EOF
-        owner: "{{ target_user }}"
-        group: "{{ target_user }}"
-        mode: "0600"
-"""
+PLAYBOOK_SOURCE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ansible")
 
 
 class ApiError(Exception):
@@ -187,6 +137,47 @@ def die(msg, code=1):
     sys.exit(code)
 
 
+def save_keypair_locally(private_key, public_key, save_dir):
+    """Write private/public key files under save_dir; return their paths."""
+    save_dir = os.path.expanduser(save_dir)
+    os.makedirs(save_dir, mode=0o700, exist_ok=True)
+    priv_path = os.path.join(save_dir, "id_ed25519")
+    pub_path = os.path.join(save_dir, "id_ed25519.pub")
+    with open(priv_path, "w", encoding="utf-8") as handle:
+        handle.write(private_key if private_key.endswith("\n")
+                     else private_key + "\n")
+    os.chmod(priv_path, 0o600)
+    with open(pub_path, "w", encoding="utf-8") as handle:
+        handle.write(public_key if public_key.endswith("\n")
+                     else public_key + "\n")
+    os.chmod(pub_path, 0o644)
+    return priv_path, pub_path
+
+
+def load_or_generate_keypair(workdir, save_dir=None):
+    """Reuse a saved keypair when present, otherwise generate (and optionally save)."""
+    if save_dir:
+        save_dir = os.path.expanduser(save_dir)
+        priv_path = os.path.join(save_dir, "id_ed25519")
+        pub_path = os.path.join(save_dir, "id_ed25519.pub")
+        if os.path.isfile(priv_path) and os.path.isfile(pub_path):
+            with open(priv_path, encoding="utf-8") as handle:
+                private_key = handle.read()
+            with open(pub_path, encoding="utf-8") as handle:
+                public_key = handle.read().strip()
+            ok(f"Reusing saved keypair from {save_dir}")
+            return private_key, public_key, save_dir
+
+    info("Generating a new ed25519 keypair")
+    private_key, public_key = generate_keypair(workdir)
+    saved_to = None
+    if save_dir:
+        priv_path, pub_path = save_keypair_locally(private_key, public_key, save_dir)
+        ok(f"Saved keypair to {priv_path} and {pub_path}")
+        saved_to = save_dir
+    return private_key, public_key, saved_to
+
+
 def load_dotenv(path=".env"):
     """Populate os.environ from a simple KEY=VALUE .env file (no override)."""
     if not os.path.isfile(path):
@@ -250,11 +241,16 @@ def find_by_name(items, name):
 
 
 def build_local_repo(workdir):
-    """Write the playbook into a fresh local git repo; return its path."""
+    """Copy ansible/ and scripts/ into a fresh local git repo; return its path."""
     repo_dir = os.path.join(workdir, "playbook-repo")
-    os.makedirs(repo_dir, exist_ok=True)
-    with open(os.path.join(repo_dir, DEFAULT_PLAYBOOK), "w", encoding="utf-8") as handle:
-        handle.write(PLAYBOOK_CONTENT)
+    if not os.path.isdir(PLAYBOOK_SOURCE_DIR):
+        die(f"Missing playbook source directory: {PLAYBOOK_SOURCE_DIR}")
+    shutil.copytree(PLAYBOOK_SOURCE_DIR, os.path.join(repo_dir, "ansible"),
+                    dirs_exist_ok=True)
+    scripts_src = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scripts")
+    if os.path.isdir(scripts_src):
+        shutil.copytree(scripts_src, os.path.join(repo_dir, "scripts"),
+                        dirs_exist_ok=True)
     env = {**os.environ, "GIT_AUTHOR_NAME": "provisioner",
            "GIT_AUTHOR_EMAIL": "provisioner@local",
            "GIT_COMMITTER_NAME": "provisioner",
@@ -357,9 +353,6 @@ def ensure_inventory(api, project_id, name, content, ssh_key_id, become_key_id=N
 def ensure_repository(api, project_id, name, git_url, branch, ssh_key_id):
     repos = api.get(f"/api/project/{project_id}/repositories")
     existing = find_by_name(repos, name)
-    if existing:
-        ok(f"Reusing repository '{name}' (id {existing['id']})")
-        return existing["id"]
     payload = {
         "name": name,
         "project_id": project_id,
@@ -367,6 +360,12 @@ def ensure_repository(api, project_id, name, git_url, branch, ssh_key_id):
         "git_branch": branch,
         "ssh_key_id": ssh_key_id,
     }
+    if existing:
+        payload["id"] = existing["id"]
+        api._request("PUT", f"/api/project/{project_id}/repositories/{existing['id']}",
+                     payload)
+        ok(f"Updated repository '{name}' (id {existing['id']}, branch {branch})")
+        return existing["id"]
     created = api.post(f"/api/project/{project_id}/repositories", payload)
     repo_id = created["id"] if isinstance(created, dict) else \
         find_by_name(api.get(f"/api/project/{project_id}/repositories"), name)["id"]
@@ -455,6 +454,15 @@ def run_and_poll(api, project_id, template_id, extra_vars, dry_run, poll_interva
 
     if last_status == "success":
         ok(f"Task #{task_id} finished successfully")
+        parser = os.path.join(os.path.dirname(__file__), "scripts",
+                              "parse_ssh_task_output.py")
+        if os.path.isfile(parser):
+            info("SSH diagnostic summary:")
+            subprocess.run(
+                [sys.executable, parser, "--project-id", str(project_id),
+                 "--task-id", str(task_id)],
+                check=False,
+            )
         return 0
     warn(f"Task #{task_id} finished with status '{last_status}'")
     return 2
@@ -508,6 +516,18 @@ def build_parser():
                    help="Playbook path within the repository (env PLAYBOOK)")
     p.add_argument("--prefix", default=env("RESOURCE_PREFIX", "ssh-provisioning"),
                    help="Name prefix for created Semaphore resources")
+    p.add_argument("--save-key-dir", default=env("SAVE_KEY_DIR"),
+                   help="Directory to save (or reuse) the generated ed25519 "
+                        "keypair locally (env SAVE_KEY_DIR)")
+    p.add_argument("--allowed-ip", default=env("ALLOWED_IP"),
+                   help="Source IP to allow for SSH (used by allow_ssh_ip.yml; "
+                        "env ALLOWED_IP)")
+    p.add_argument("--doctl-token", default=env("DOCTL_TOKEN"),
+                   help="DigitalOcean API token for Cloud Firewall SSH allow "
+                        "(env DOCTL_TOKEN)")
+    p.add_argument("--do-firewall-id", default=env("DO_FIREWALL_ID"),
+                   help="DO Cloud Firewall UUID; auto-detected from droplet IP "
+                        "if omitted (env DO_FIREWALL_ID)")
     p.add_argument("--dry-run", action="store_true",
                    help="Run the Ansible task in --check mode (no changes made)")
     p.add_argument("--no-run", action="store_true",
@@ -556,12 +576,20 @@ def main(argv=None):
 
     # Step 1: keypair + key store ------------------------------------------- #
     if args.new_public_key:
-        with open(args.new_public_key, encoding="utf-8") as handle:
+        pub_path = os.path.expanduser(args.new_public_key)
+        with open(pub_path, encoding="utf-8") as handle:
             new_public_key = handle.read().strip()
         info("Using provided public key")
+        new_private_key = None
+        saved_key_dir = None
+        priv_guess = pub_path[:-4] if pub_path.endswith(".pub") else pub_path
+        if os.path.isfile(priv_guess):
+            with open(priv_guess, encoding="utf-8") as handle:
+                new_private_key = handle.read()
+            info(f"Found matching private key at {priv_guess} for SSH self-test")
     else:
-        info("Generating a new ed25519 keypair")
-        new_private_key, new_public_key = generate_keypair(workdir)
+        new_private_key, new_public_key, saved_key_dir = load_or_generate_keypair(
+            workdir, args.save_key_dir)
 
     project_id = ensure_project(api, args)
 
@@ -618,6 +646,14 @@ def main(argv=None):
         "bootstrap_user": bootstrap_user,
         "new_public_key": new_public_key,
     }
+    if new_private_key:
+        extra_vars["new_private_key"] = new_private_key
+    if args.allowed_ip:
+        extra_vars["allowed_ip"] = args.allowed_ip
+    if args.doctl_token:
+        extra_vars["doctl_token"] = args.doctl_token
+    if args.do_firewall_id:
+        extra_vars["do_firewall_id"] = args.do_firewall_id
     environment_id = ensure_environment(
         api, project_id, f"{args.prefix}-env", extra_vars)
     template_id = ensure_template(
@@ -633,6 +669,8 @@ def main(argv=None):
     print(f"    environment_id = {environment_id}")
     print(f"    template_id    = {template_id}")
     print(f"    public key     = {new_public_key}")
+    if saved_key_dir:
+        print(f"    private key    = {os.path.join(os.path.expanduser(saved_key_dir), 'id_ed25519')}")
     print()
 
     # Step 6: run + poll ---------------------------------------------------- #

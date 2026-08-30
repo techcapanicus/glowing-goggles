@@ -52,3 +52,38 @@ for repo-based runs. Run `python3 provision_ssh.py --help` for all options.
 > The Semaphore server must be able to reach the playbook repository (a public
 > Git URL, or a local path that exists on the server). Omit `--dry-run` only
 > when you intend to actually modify `authorized_keys` on the target hosts.
+
+### Dev environment (Semaphore UI)
+
+For the dashboard dev workflow, use the helper script. It reuses project `MCM`
+(id `6`), the `deployment` Key Store key (id `303`) for bootstrap SSH, and saves
+the generated keypair under `keys/semaphore-ui-dev/` (gitignored):
+
+```bash
+cp .env.example .env
+# Set SEMAPHORE_TOKEN and TARGET_HOSTS (your dev server IP) in .env
+./scripts/provision-dev-ssh.sh          # actually provisions root authorized_keys
+# ./scripts/provision-dev-ssh.sh --dry-run   # Ansible --check only
+```
+
+Connect with the saved private key:
+
+```bash
+ssh -i keys/semaphore-ui-dev/id_ed25519 root@<dev-server>
+```
+
+### DigitalOcean Cloud Firewall
+
+If inbound SSH is blocked by a DO Cloud Firewall before traffic reaches the
+host, set `DOCTL_TOKEN` (and optionally `DO_FIREWALL_ID`) in `.env`. The
+playbook detects the Semaphore controller's public IP, adds a tcp/22 allow
+rule, waits 5 seconds, and re-runs the SSH self-test.
+
+To unblock your local machine without re-running the full playbook:
+
+```bash
+export DOCTL_TOKEN=...
+./scripts/open_ssh_access.sh --firewall-id <uuid>
+# or auto-detect firewall from the target droplet:
+./scripts/open_ssh_access.sh --droplet-ip 64.23.139.247
+```

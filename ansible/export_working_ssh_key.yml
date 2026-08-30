@@ -1,0 +1,50 @@
+---
+- name: Export working controller SSH key for external use
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Verify key works against droplet
+      ansible.builtin.command:
+        argv:
+          - ssh
+          - -o
+          - BatchMode=yes
+          - -o
+          - StrictHostKeyChecking=no
+          - -o
+          - ConnectTimeout=10
+          - -i
+          - /root/.ssh/id_ed25519
+          - root@64.23.139.247
+          - echo SSH_OK
+      register: ssh_check
+      changed_when: false
+      failed_when: false
+
+    - name: Show SSH check
+      ansible.builtin.debug:
+        msg: "Controller key test: {{ 'OK' if ssh_check.rc == 0 else 'FAILED rc=' ~ ssh_check.rc }}"
+
+    - name: Read working private key and public key
+      ansible.builtin.slurp:
+        src: "{{ item }}"
+      loop:
+        - /root/.ssh/id_ed25519
+        - /root/.ssh/id_ed25519.pub
+      register: key_files
+
+    - name: Get public key fingerprint
+      ansible.builtin.command:
+        argv: [ssh-keygen, -lf, /root/.ssh/id_ed25519.pub]
+      register: fp
+      changed_when: false
+
+    - name: Output keys as base64 for local save
+      ansible.builtin.debug:
+        msg:
+          - "KEY_FILE=id_ed25519"
+          - "KEY_B64={{ key_files.results[0].content }}"
+          - "PUB_B64={{ key_files.results[1].content }}"
+          - "FINGERPRINT={{ fp.stdout | default('') }}"

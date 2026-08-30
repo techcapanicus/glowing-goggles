@@ -1,0 +1,65 @@
+---
+- name: List DO droplets
+  ansible.builtin.uri:
+    url: https://api.digitalocean.com/v2/droplets?per_page=200
+    method: GET
+    headers:
+      Authorization: "Bearer {{ DO_TOKEN | trim }}"
+    status_code: 200
+  register: do_droplets
+
+- name: Collect droplet IDs matching target public IPs
+  ansible.builtin.set_fact:
+    target_droplet_ids: "{{ target_droplet_ids | default([]) + [droplet.id] }}"
+  loop: "{{ do_droplets.json.droplets }}"
+  vars:
+    droplet: "{{ item }}"
+    public_ips: "{{ item.networks.v4 | map(attribute='ip_address') | list }}"
+  when: public_ips | intersect(droplet_ip_list) | length > 0
+
+- name: Show matched DO droplets
+  ansible.builtin.debug:
+    msg: "DO droplet IDs for whitelist: {{ target_droplet_ids | default([]) }}"
+
+- name: Fetch firewalls per droplet
+  ansible.builtin.uri:
+    url: "https://api.digitalocean.com/v2/droplets/{{ item }}/firewalls"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ DO_TOKEN | trim }}"
+    status_code: 200
+  loop: "{{ target_droplet_ids | default([]) }}"
+  register: droplet_firewalls
+
+- name: Build unique firewall list
+  ansible.builtin.set_fact:
+    unique_firewalls: "{{ unique_firewalls | default([]) + [fw] }}"
+  loop: "{{ droplet_firewalls.results | default([]) | map(attribute='json.firewalls') | flatten }}"
+  vars:
+    fw: "{{ item }}"
+  when: fw.id not in (unique_firewalls | default([]) | map(attribute='id') | list)
+
+- name: Add inbound SSH for runner IP to each firewall
+  ansible.builtin.uri:
+    url: "https://api.digitalocean.com/v2/firewalls/{{ item.id }}/rules"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ DO_TOKEN | trim }}"
+      Content-Type: application/json
+    body_format: json
+    body:
+      inbound_rules:
+        - protocol: tcp
+          ports: "22"
+          sources:
+            addresses:
+              - "{{ resolved_ip }}/32"
+    status_code: [204, 422]
+  loop: "{{ unique_firewalls | default([]) }}"
+  register: do_fw_add
+
+- name: DO whitelist summary
+  ansible.builtin.debug:
+    msg: >-
+      Added {{ resolved_ip }}/32 to
+      {{ unique_firewalls | default([]) | map(attribute='name') | list }}

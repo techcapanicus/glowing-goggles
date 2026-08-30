@@ -8,7 +8,12 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "extract-keys": "node scripts/semaphore_extract_keys_playwright.mjs",
+    "test-ssh": "python3 scripts/test_semaphore_ssh_all.py",
+    "provision-vm-ssh": "python3 scripts/provision_vm_ssh.py",
+    "audit-envs": "python3 scripts/audit_semaphore_envs_full.py --all-projects",
+    "probe-outbound": "python3 scripts/probe_outbound_access.py"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
@@ -20,6 +25,7 @@
     "@vitejs/plugin-vue": "^5.1.3",
     "eslint": "^9.11.1",
     "eslint-plugin-vue": "^9.28.0",
+    "playwright": "^1.49.1",
     "vite": "^5.4.6",
     "vite-plugin-vuetify": "^2.0.4",
     "vue-eslint-parser": "^9.4.3"

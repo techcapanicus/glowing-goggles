@@ -1,0 +1,24 @@
+---
+- name: Diagnose SSH firewall on host
+  hosts: all
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Collect firewall state
+      ansible.builtin.shell: |
+        set -x
+        echo '=== iptables INPUT ==='
+        iptables -L INPUT -n -v --line-numbers 2>/dev/null | head -25 || true
+        echo '=== nftables ==='
+        nft list ruleset 2>/dev/null | head -40 || true
+        echo '=== hosts.allow/deny ==='
+        cat /etc/hosts.allow 2>/dev/null || true
+        cat /etc/hosts.deny 2>/dev/null || true
+        echo '=== sshd socket ==='
+        ss -tlnp | grep ':22' || true
+      register: fw
+      changed_when: false
+
+    - name: Show firewall state
+      ansible.builtin.debug:
+        var: fw.stdout_lines

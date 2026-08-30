@@ -1,0 +1,31 @@
+---
+# Search MySQL and MongoDB for DigitalOcean / firewall API configuration.
+- name: Search databases for DigitalOcean config
+  hosts: all
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Install mysql client if needed
+      ansible.builtin.apt:
+        name: default-mysql-client
+        state: present
+        update_cache: true
+      failed_when: false
+
+    - name: Install pymongo if needed
+      ansible.builtin.apt:
+        name: python3-pymongo
+        state: present
+        update_cache: true
+      failed_when: false
+
+    - name: Run database DO/firewall search on target
+      ansible.builtin.script: ../scripts/search_db_do_config.py
+      register: db_search
+      changed_when: false
+      failed_when: false
+
+    - name: Print database search report
+      ansible.builtin.debug:
+        var: db_search.stdout_lines

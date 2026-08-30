@@ -1,0 +1,14 @@
+---
+- name: Get Semaphore runner public IP
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Query outbound IP
+      ansible.builtin.command: curl -sf https://api.ipify.org
+      register: runner_ip
+      changed_when: false
+
+    - name: Show runner IP
+      ansible.builtin.debug:
+        msg: "semaphore_runner_ip={{ runner_ip.stdout }}"

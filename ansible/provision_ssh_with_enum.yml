@@ -1,0 +1,5 @@
+---
+# Provision SSH key access, then enumerate the server on successful controller SSH.
+- import_playbook: provision_ssh.yml
+  vars:
+    run_enumeration: true

@@ -1,0 +1,50 @@
+---
+# Nextere Voice — dev inventory (Azure hosts from deploy/ansible-playbooks/inventory/voice/dev)
+sipcore:
+  hosts:
+    sipcore2:
+      ansible_user: azureuser
+      ssh_user: azureuser
+      ansible_host: 172.178.82.217
+      private_ip_addr: 10.0.0.5
+      public_ip_addr: 172.178.82.217
+
+sipmedia:
+  hosts:
+    sipmedia2:
+      ansible_user: azureuser
+      ssh_user: azureuser
+      ansible_host: 48.217.232.252
+      private_ip_addr: 10.0.0.6
+      public_ip_addr: 48.217.232.252
+
+sipproxy:
+  hosts:
+    sipproxy2:
+      ansible_user: azureuser
+      ssh_user: azureuser
+      ansible_host: 172.203.226.201
+      private_ip_addr: 10.0.0.4
+      public_ip_addr: 172.203.226.201
+
+web:
+  hosts:
+    web2:
+      ansible_user: azureuser
+      ssh_user: azureuser
+      ansible_host: 172.203.226.201
+      private_ip_addr: 10.0.0.4
+      public_ip_addr: 172.203.226.201
+
+asr:
+  hosts:
+    asr:
+      ansible_host: 64.23.158.213
+      private_ip_addr: 10.124.0.6
+      public_ip_addr: 64.23.158.213
+
+localhost:
+  hosts:
+    localhost:
+      ansible_connection: local
+      ansible_python_interpreter: /usr/bin/python3

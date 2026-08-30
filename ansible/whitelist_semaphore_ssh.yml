@@ -1,0 +1,100 @@
+---
+# Whitelist Semaphore runner (ASR) for SSH to Voice dev SIP hosts.
+#
+# DigitalOcean: set DO_TOKEN, optional DROPLET_IPS (comma-separated public IPs).
+# Azure: set AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID,
+#         AZURE_SUBSCRIPTION_ID, and optional AZURE_NSG (resource group/NSG name).
+#
+# TARGET_IP defaults to the Semaphore runner public IP (64.23.158.213 / ASR).
+
+- name: Whitelist Semaphore runner IP on cloud firewalls
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Detect runner public IP
+      ansible.builtin.command: curl -sf https://api.ipify.org
+      register: runner_ip
+      changed_when: false
+      when: TARGET_IP | default('') | trim == ''
+
+    - name: Set resolved target IP
+      ansible.builtin.set_fact:
+        resolved_ip: >-
+          {{
+            (TARGET_IP | default('') | trim)
+            if (TARGET_IP | default('') | trim) != ''
+            else (runner_ip.stdout | default('') | trim)
+          }}
+
+    - name: Default Voice dev droplet IPs (legacy DO + current Azure)
+      ansible.builtin.set_fact:
+        droplet_ip_list: >-
+          {{
+            (DROPLET_IPS | default('') | trim).split(',')
+            | reject('equalto', '')
+            | list
+            if (DROPLET_IPS | default('') | trim) != ''
+            else [
+              '149.130.210.6',
+              '172.178.82.217',
+              '172.208.50.88',
+              '172.190.25.232'
+            ]
+          }}
+
+    - name: Whitelist on DigitalOcean firewalls
+      ansible.builtin.include_tasks: tasks/do_whitelist_ssh.yml
+      when: DO_TOKEN | default('') | trim | length > 0
+
+    - name: Whitelist on Azure NSG (all NSGs in subscription when AZURE_NSG unset)
+      ansible.builtin.include_tasks: tasks/azure_whitelist_ssh.yml
+      when:
+        - AZURE_CLIENT_ID | default('') | trim | length > 0
+        - AZURE_CLIENT_SECRET | default('') | trim | length > 0
+        - AZURE_TENANT_ID | default('') | trim | length > 0
+        - AZURE_SUBSCRIPTION_ID | default('') | trim | length > 0
+
+    - name: No cloud credentials — print manual steps
+      ansible.builtin.debug:
+        msg:
+          - "No DO_TOKEN or Azure service principal in extra vars."
+          - "Whitelist {{ resolved_ip }}/32 for tcp/22 on sipcore firewalls/NSGs."
+          - "Semaphore runner: ASR {{ resolved_ip }}"
+          - "sipcore targets: {{ droplet_ip_list | join(', ') }}"
+      when:
+        - DO_TOKEN | default('') | trim | length == 0
+        - AZURE_CLIENT_ID | default('') | trim | length == 0
+
+    - name: Wait for rule propagation
+      ansible.builtin.pause:
+        seconds: 10
+      when: DO_TOKEN | default('') | trim | length > 0 or AZURE_CLIENT_ID | default('') | trim | length > 0
+
+    - name: Test SSH to sipcore candidates from runner
+      ansible.builtin.shell: |
+        set -uo pipefail
+        for ip in {{ droplet_ip_list | join(' ') }}; do
+          if timeout 5 bash -c "echo > /dev/tcp/${ip}/22" 2>/dev/null; then
+            echo "PORT22_OPEN ${ip}"
+            ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 -o BatchMode=yes \
+              -i "${SSH_KEY_PATH:-/root/.ssh/id_rsa}" \
+              azureuser@"${ip}" "echo SSH_OK ${ip}" 2>&1 \
+              || ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 -o BatchMode=yes \
+              -i "${SSH_KEY_PATH:-/root/.ssh/id_rsa}" \
+              debian@"${ip}" "echo SSH_OK ${ip}" 2>&1 \
+              || echo "SSH_FAIL ${ip}"
+          else
+            echo "PORT22_CLOSED ${ip}"
+          fi
+        done
+      args:
+        executable: /bin/bash
+      register: ssh_probe
+      changed_when: false
+      failed_when: false
+
+    - name: SSH probe results
+      ansible.builtin.debug:
+        var: ssh_probe.stdout_lines

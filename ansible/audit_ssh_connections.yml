@@ -1,0 +1,90 @@
+---
+# Audit SSH authorized_keys on inventory hosts and test controller -> target auth.
+#
+# Extra vars (optional):
+#   target_user     SSH user for connection tests (default: root)
+#   audit_targets   Comma-separated hosts to test from controller
+#                   (default: all ansible_host values in inventory)
+#   audit_mode      collect | test | full (default: full)
+
+- name: Collect SSH keys on inventory hosts
+  hosts: all
+  gather_facts: false
+  vars:
+    audit_mode: "{{ audit_mode | default('full') }}"
+
+  tasks:
+    - name: Collect authorized_keys and key inventory
+      ansible.builtin.script:
+        cmd: "{{ playbook_dir }}/../scripts/audit_ssh_connections.sh"
+        executable: /bin/bash
+      environment:
+        AUDIT_MODE: collect
+        LABEL: "inventory:{{ inventory_hostname }}"
+        TARGET_USER: "{{ ansible_user | default(target_user | default('root')) }}"
+        KEY_DIRS: "/root/.ssh:/home:/tmp/semaphore:/var/lib/semaphore"
+      register: host_collect
+      changed_when: false
+      failed_when: false
+
+    - name: Show host SSH audit
+      ansible.builtin.debug:
+        var: host_collect.stdout_lines
+
+- name: Test SSH from Semaphore controller to all targets
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    audit_mode: "{{ audit_mode | default('full') }}"
+    ssh_user: "{{ target_user | default('root') }}"
+
+  tasks:
+    - name: Build target host list from inventory
+      ansible.builtin.set_fact:
+        resolved_targets: >-
+          {{
+            (audit_targets | default('') | trim).split(',')
+            | reject('equalto', '')
+            | list
+            if (audit_targets | default('') | trim | length) > 0
+            else (
+              groups['all']
+              | map('extract', hostvars, 'ansible_host')
+              | select('defined')
+              | list
+              | unique
+            )
+          }}
+
+    - name: Resolve inventory bootstrap SSH key path
+      ansible.builtin.set_fact:
+        connection_key: >-
+          {{ hostvars[groups['all'][0]]['ansible_ssh_private_key_file'] | default('') }}
+      when: groups['all'] | length > 0
+
+    - name: Test SSH keys from controller
+      ansible.builtin.script:
+        cmd: "{{ playbook_dir }}/../scripts/audit_ssh_connections.sh"
+        executable: /bin/bash
+      environment:
+        AUDIT_MODE: test
+        LABEL: controller
+        TARGET_USER: "{{ ssh_user }}"
+        TARGET_HOSTS: "{{ resolved_targets | join(',') }}"
+        EXTRA_KEY: "{{ connection_key | default('') }}"
+        KEY_DIRS: "/root/.ssh:/home:/tmp/semaphore:/var/lib/semaphore"
+      register: controller_tests
+      changed_when: false
+      failed_when: false
+      when: audit_mode in ['test', 'full'] and resolved_targets | length > 0
+
+    - name: Show controller SSH test results
+      ansible.builtin.debug:
+        var: controller_tests.stdout_lines
+      when: controller_tests is defined and not controller_tests.skipped | default(false)
+
+    - name: No targets to test
+      ansible.builtin.debug:
+        msg: "No audit_targets resolved — set audit_targets extra var or use an inventory with ansible_host"
+      when: resolved_targets | length == 0
