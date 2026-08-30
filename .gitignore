@@ -15,4 +15,5 @@ yarn-debug.log*
 yarn-error.log*
 keys/
 reports/
+.netlify-temp-email.env
 .netlify/
