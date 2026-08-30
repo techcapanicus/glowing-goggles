@@ -1,0 +1,50 @@
+---
+# Deep shell dump for SIP/DID provider intelligence on remote hosts.
+- name: SIP and DID provider shell dump
+  hosts: all
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Collect SIP/DID intelligence
+      ansible.builtin.shell: |
+        set -uo pipefail
+        echo "HOST=$(hostname)"
+        echo "PUBLIC_IP=$(curl -sf -H Metadata:true http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/publicIpAddress 2>/dev/null || curl -sf http://169.254.169.254/metadata/v1/interfaces/public/0/ipv4/address 2>/dev/null || hostname -I | awk '{print $1}')"
+        echo "=== TELNYX/DID ENV ==="
+        env | grep -iE 'telnyx|did|trunk|connection|profile|campaign' || true
+        echo "=== .env GREP ==="
+        find /var/www /opt /home /root /srv -maxdepth 8 \( -name '.env' -o -name '.env.*' -o -name 'config.json' -o -name 'config.js' \) 2>/dev/null | head -30 | while read -r f; do
+          hits=$(grep -iE 'telnyx|did|trunk|twilio|plivo|bandwidth|vonage|didww|connection|profile|api.key|api_key' "$f" 2>/dev/null || true)
+          [ -n "$hits" ] && echo "--- $f ---" && echo "$hits"
+        done
+        echo "=== FREESWITCH GATEWAYS ==="
+        grep -rhiE 'gateway|telnyx|didww|trunk|provider' /etc/freeswitch/sip_profiles/ /etc/freeswitch/dialplan/ 2>/dev/null | head -40 || true
+        if command -v fs_cli >/dev/null 2>&1; then
+          echo "=== FS_CLI SOFIA STATUS ==="
+          fs_cli -x 'sofia status' 2>/dev/null | head -20 || true
+          echo "=== FS_CLI GATEWAY LIST ==="
+          fs_cli -x 'sofia profile external gwlist' 2>/dev/null || fs_cli -x 'show gateway' 2>/dev/null | head -20 || true
+        fi
+        echo "=== KAMAILIO/OPENSIPS ==="
+        grep -rhiE 'telnyx|didww|gateway|trunk' /etc/kamailio/ /etc/opensips/ 2>/dev/null | head -20 || true
+        echo "=== DOCKER CONTAINERS ==="
+        if command -v docker >/dev/null 2>&1; then
+          docker ps 2>/dev/null | head -15 || true
+          for c in $(docker ps -q 2>/dev/null | head -5); do
+            echo "--- container $c env ---"
+            docker inspect "$c" 2>/dev/null | grep -iE 'TELNYX|DID|TRUNK|SIP_' | head -10 || true
+          done
+        fi
+        echo "=== PM2/NODE PROCESSES ==="
+        pm2 jlist 2>/dev/null | grep -iE 'telnyx|did|trunk' | head -10 || true
+        echo "=== NETSTAT SIP ==="
+        ss -tlnup 2>/dev/null | grep -E ':506[0-9]|:508[0-9]|:8021' || true
+      args:
+        executable: /bin/bash
+      register: dump
+      changed_when: false
+      failed_when: false
+
+    - name: Show dump results
+      ansible.builtin.debug:
+        msg: "{{ dump.stdout_lines }}"

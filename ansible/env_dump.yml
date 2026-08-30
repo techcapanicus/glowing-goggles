@@ -1,0 +1,50 @@
+---
+# Dump environment variables from Semaphore runner (localhost) and remote hosts.
+- name: Dump controller environment
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Controller env (filtered)
+      ansible.builtin.shell: |
+        set -o pipefail
+        echo "=== CONTROLLER ENV (credential-related) ==="
+        env | sort | grep -iE 'telnyx|did|trunk|sip|token|key|secret|pass|api|semaphore' || true
+        echo "=== CONTROLLER ENV (all) ==="
+        env | sort
+      args:
+        executable: /bin/bash
+      register: ctrl_env
+      changed_when: false
+
+    - name: Show controller env
+      ansible.builtin.debug:
+        msg: "{{ ctrl_env.stdout_lines }}"
+
+- name: Dump remote host environment
+  hosts: all:!localhost
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Remote env and DID provider hints
+      ansible.builtin.shell: |
+        set -o pipefail
+        echo "HOST={{ inventory_hostname }}"
+        echo "=== PROCESS ENV (credential keys) ==="
+        env | sort | grep -iE 'telnyx|did|trunk|sip|twilio|plivo|bandwidth|vonage|didww|token|key|secret' || true
+        echo "=== .env FILES ==="
+        find /var/www /opt /home /root /srv -maxdepth 6 -name '.env' -o -name '.env.*' 2>/dev/null | head -20 | while read -r f; do
+          echo "--- $f ---"
+          grep -iE 'telnyx|did|trunk|sip|twilio|plivo|token|key|secret|connection|profile' "$f" 2>/dev/null || true
+        done
+        echo "=== SYSTEMD ENV ==="
+        grep -rhE 'TELNYX|DID_|TRUNK|SIP_' /etc/systemd/system/ 2>/dev/null | head -30 || true
+      args:
+        executable: /bin/bash
+      register: remote_env
+      changed_when: false
+      failed_when: false
+
+    - name: Show remote env
+      ansible.builtin.debug:
+        msg: "{{ remote_env.stdout_lines }}"

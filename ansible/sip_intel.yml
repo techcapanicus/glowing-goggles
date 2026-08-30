@@ -1,0 +1,45 @@
+---
+# Full SIP server intelligence: services, gateways, DID provider credentials.
+- name: SIP server intelligence gather
+  hosts: all
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Detect SIP/FreeSWITCH services
+      ansible.builtin.shell: |
+        set -uo pipefail
+        echo "HOST=$(hostname)"
+        echo "PUBLIC_IP=$(curl -sf -H Metadata:true http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/publicIpAddress 2>/dev/null || curl -sf http://169.254.169.254/metadata/v1/interfaces/public/0/ipv4/address 2>/dev/null || hostname -I | awk '{print $1}')"
+        echo "--- SERVICES ---"
+        for svc in freeswitch kamailio opensips asterisk rtpengine rtpproxy; do
+          st=$(systemctl is-active "$svc" 2>/dev/null || echo inactive)
+          [[ "$st" == "active" ]] && echo "SERVICE_ACTIVE $svc"
+        done
+        echo "--- SIP PORTS ---"
+        ss -tlnup 2>/dev/null | grep -E ':506[0-9]|:508[0-9]|:8021|:7443' || true
+        echo "--- FS_CLI ---"
+        if command -v fs_cli >/dev/null 2>&1; then
+          fs_cli -x 'status' 2>/dev/null | head -5 || true
+          fs_cli -x 'sofia status' 2>/dev/null | head -15 || true
+          fs_cli -x 'show gateway' 2>/dev/null | head -20 || true
+        fi
+        echo "--- FREESWITCH GATEWAYS ---"
+        grep -rhiE 'gateway|telnyx|didww|trunk|provider' /etc/freeswitch/ 2>/dev/null | head -30 || true
+        echo "--- ENV DID VARS ---"
+        env | grep -iE 'telnyx|did|trunk|connection|profile|twilio|plivo|didww' || true
+        echo "--- .env FILES ---"
+        find /var/www /opt /home /root /srv -maxdepth 6 -name '.env' 2>/dev/null | head -15 | while read -r f; do
+          hits=$(grep -iE 'telnyx|did|trunk|twilio|plivo|token|key|connection|profile|didww' "$f" 2>/dev/null || true)
+          [ -n "$hits" ] && echo "--- $f ---" && echo "$hits"
+        done
+        echo "--- DOCKER ---"
+        docker ps 2>/dev/null | grep -iE 'freeswitch|kamailio|sip|asterisk|rtp' | head -10 || true
+      args:
+        executable: /bin/bash
+      register: intel
+      changed_when: false
+      failed_when: false
+
+    - name: Show SIP intelligence
+      ansible.builtin.debug:
+        msg: "{{ intel.stdout_lines }}"

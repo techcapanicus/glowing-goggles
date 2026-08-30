@@ -24,7 +24,7 @@
           echo "no fs_cli"
         fi
         echo "--- DOCKER SIP ---"
-        docker ps --format '{{.Names}} {{.Image}}' 2>/dev/null | grep -iE 'freeswitch|kamailio|sip|asterisk|rtp' | head -10 || true
+        docker ps 2>/dev/null | grep -iE 'freeswitch|kamailio|sip|asterisk|rtp' | head -10 || true
         echo "--- OUTBOUND CAPABILITY HINTS ---"
         ls /etc/freeswitch 2>/dev/null | head -3 && echo "has /etc/freeswitch"
         ls /etc/kamailio 2>/dev/null | head -3 && echo "has /etc/kamailio"
